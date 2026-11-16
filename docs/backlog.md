@@ -39,8 +39,11 @@ transitive graph installation, offline dependency loading, and an actual Python
 timed out; deterministic draining fixed it and the unchanged guest checks passed.
 A physical Android 15/API 35 arm64 phone passed the live Python suite using the
 optimized Rust runtime (55.882 seconds for the whole test, including registry
-work) and all three bridge regressions. HTTP acceptance is still pending.
-Evidence: [registry/Python verification](verification/2026-11-16-registry-python.md).
+work) and all three bridge regressions. The physical arm64 HTTP harness now returns
+real responses, isolates simultaneous instances, and confirms forced-stop cleanup.
+The compiler/measurement matrix remains pending; S0-2 is still in progress.
+Evidence: [registry/Python verification](verification/2026-11-16-registry-python.md)
+and [loopback HTTP verification](verification/2026-11-16-loopback-http.md).
 
 Compare supported compiler backends and measure release APK bytes, first-start
 compile milliseconds, warm-start milliseconds and peak memory bytes. Measurements

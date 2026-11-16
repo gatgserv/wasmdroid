@@ -13,7 +13,10 @@ The engine now searches/resolves the public registry, verifies WebC v3 downloads
 and transitive dependency graphs, and publishes installed metadata atomically.
 An explicit native harness executes the real Python package offline on Android;
 it is not yet an arbitrary-command user runner or a full package-manager UI.
-Background execution, HTTP and complete Stage 0 acceptance remain pending. The curated catalog is
+An explicit HTTP harness now serves the real static-web-server package through
+an isolated virtual network and a managed host loopback port, with verified
+forced-stop cleanup. Background execution, general lifecycle operations and
+the Stage 0 compiler/measurement matrix remain pending. The curated catalog is
 empty until packages have Android evidence. No Play compatibility claim is made.
 
 ## Layout
@@ -107,6 +110,18 @@ cargo run --locked -p wasmdroid-engine --example registry -- pull wasmer.io/pyth
 
 Product screens are specified in [docs/design/ui-flow.md](docs/design/ui-flow.md)
 and sketched before their Compose implementation.
+
+The separate live HTTP suite also checks concurrent guest-port/document-root isolation:
+
+```powershell
+.\tools\test-android.ps1 -Serial <device-serial> -Abis arm64-v8a -RustProfile release -TestClass dev.wasmdroid.app.HttpProbeTest -TimeoutSeconds 600
+```
+
+It requires registry HTTPS and permits Android cleartext only to `127.0.0.1`.
+The guest network is inbound-only; it never receives a host networking backend.
+Stop reports whether SIGKILL escalation was needed and verifies execution work
+has unwound, independently of the WASIX process status. See the
+[HTTP verification report](docs/verification/2026-11-16-loopback-http.md).
 
 ## License
 
