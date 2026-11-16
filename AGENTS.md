@@ -2,6 +2,7 @@
 
 - Read the product plan, README, `docs/backlog.md`, and verification evidence before changes.
 - Communicate with George in Romanian; write code and technical documentation in English.
+- Attribute every commit's author and committer to `gatgserv` using `299763473+gatgserv@users.noreply.github.com`. Do not add assistant authors or co-author trailers.
 - Keep Wasmer dependencies and imports in `engine/drivers/wasmer-local` only.
 - Preserve neutral serde contracts, endpoint identity, explicit unsupported errors, and sandbox defaults.
 - On Windows prefer `%USERPROFILE%\.cargo\bin` rustup proxies: a separate Rust MSI can shadow them.
