@@ -121,14 +121,14 @@ fn registry_python_probe(
     let graph = installer.pull(
         &ArtifactReference::parse("wasmer.io/python/python@3.13.20")?,
         &mut |progress| {
-            if progress.bytes_downloaded == 0 {
-                if let Some(observer) = observer {
-                    observer.on_phase(format!(
-                        "{:?}:{}",
-                        progress.phase,
-                        progress.reference.as_str()
-                    ));
-                }
+            if progress.bytes_downloaded == 0
+                && let Some(observer) = observer
+            {
+                observer.on_phase(format!(
+                    "{:?}:{}",
+                    progress.phase,
+                    progress.reference.as_str()
+                ));
             }
         },
     )?;

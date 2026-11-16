@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.95.0
       - run: cargo test --locked -p wasmdroid-wasmer-local
-      - run: cargo clippy --locked -p wasmdroid-wasmer-local --all-targets -- -D warnings
+      - run: cargo clippy --locked -p wasmdroid-wasmer-local -p wasmdroid-ffi --features wasmdroid-ffi/wasmer --all-targets -- -D warnings
 
   android:
     runs-on: windows-latest
@@ -56,6 +56,9 @@ jobs:
         with:
           targets: aarch64-linux-android, x86_64-linux-android
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
       - run: ./gradlew.bat :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug '-PwasmdroidAbis=arm64-v8a,x86_64' -PwasmdroidRuntime=true
         working-directory: android
