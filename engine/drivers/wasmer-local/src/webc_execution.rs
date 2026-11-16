@@ -228,3 +228,27 @@ fn capture_tail(
         total > limit,
     ))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn drains_bounded_tail_after_exit_while_descriptor_clones_remain_open() {
+        let (mut writer, reader) = Pipe::channel();
+        writer.write_all(&vec![b'x'; 9000]).unwrap();
+        writer.write_all(b"tail").unwrap();
+        let finished = Arc::new(AtomicBool::new(true));
+        let (send, receive) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = send.send(capture_tail(reader, 4, finished));
+        });
+        let result = receive
+            .recv_timeout(std::time::Duration::from_secs(2))
+            .expect("capture must finish without waiting for every writer clone to close")
+            .unwrap();
+        assert_eq!(result, ("tail".into(), true));
+        drop(writer);
+    }
+}
