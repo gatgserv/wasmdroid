@@ -4,13 +4,17 @@ Local backlog while no remote repository/issue tracker is connected. The owner
 selected Apache-2.0 on 2026-11-16. The public repository account is undecided and
 the GitHub CLI is unauthenticated; no public repository or PR has been created.
 
-## S0-1 — Engine foundation and native bridge (in progress)
+## S0-1 — Engine foundation and native bridge (complete)
 
 Scope: neutral contracts; content verification; SQLite migration; Compose →
 generated UniFFI → Rust; finite WASI fd_write probe. Prerequisite: none.
 Risks: backend support differs by host; standalone Rust MSI can shadow rustup.
 Acceptance: Rust checks; Android APK build; targeted native bridge/probe tests;
 record exact revision, ABI, commands and limitations in the verification report.
+Evidence: [2026-11-16 foundation verification](verification/2026-11-16-stage0-foundation.md),
+code revision `55641f8d81d9085322df4653e0a9e09b355e603b`: 15 Rust regressions,
+3 actual Android x86_64 integration tests, dual-ABI build, and lint (0 errors,
+9 warnings). This does not complete S0-2 or the full Stage 0 exit criterion.
 
 ## S0-2 — Registry → verified WebC → Android execution (pending)
 
