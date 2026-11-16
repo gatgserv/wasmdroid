@@ -11,7 +11,7 @@ cranelift = ["wasmer/cranelift"]
 singlepass = ["wasmer/singlepass"]
 
 [dependencies]
-wasmer = { version = "=7.4.2", default-features = false, features = ["sys", "wat"] }
+wasmer = { version = "=7.4.2", default-features = false, features = ["sys", "wat", "experimental-host-interrupt"] }
 wasmer-wasix = { version = "=0.704.2", default-features = false, features = ["sys-minimal"] }
 wasmer-types = "=7.4.2"
 tokio = { version = "1", features = ["rt-multi-thread", "time", "net", "io-util", "sync", "macros"] }
@@ -24,3 +24,4 @@ serde.workspace = true
 url = "2.5"
 wasmer-wasix-types = "=0.704.2"
 virtual-net = { version = "=0.704.2", default-features = false, features = ["tokio"] }
+libc = "0.2"

@@ -3,6 +3,7 @@
 #[cfg(not(any(feature = "cranelift", feature = "singlepass")))]
 compile_error!("Select the cranelift or singlepass driver feature");
 pub mod benchmark;
+pub mod cancellation;
 pub mod http_execution;
 mod loopback;
 mod tasks;

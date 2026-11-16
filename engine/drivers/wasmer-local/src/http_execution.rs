@@ -251,12 +251,22 @@ impl HttpInstance {
                     Err(_) => {
                         forced = true;
                         self.process.signal_process(Signal::Sigkill);
-                        tokio::time::timeout(
-                            Duration::from_secs(10),
-                            self.execution.wait_finished(),
-                        )
-                        .await
-                        .context("guest did not exit after kill")?
+                        let deadline = Instant::now() + Duration::from_secs(10);
+                        loop {
+                            self.tasks.interrupt_all();
+                            if let Ok(result) = tokio::time::timeout(
+                                Duration::from_millis(20),
+                                self.execution.wait_finished(),
+                            )
+                            .await
+                            {
+                                break result;
+                            }
+                            anyhow::ensure!(
+                                Instant::now() < deadline,
+                                "guest did not exit after kill"
+                            );
+                        }
                     }
                 };
             if tokio::time::timeout(Duration::from_secs(2), async {
@@ -273,6 +283,7 @@ impl HttpInstance {
                 forced = true;
                 tokio::time::timeout(Duration::from_secs(10), async {
                     while self.tasks.active() != 0 {
+                        self.tasks.interrupt_all();
                         tokio::time::sleep(Duration::from_millis(10)).await;
                     }
                 })

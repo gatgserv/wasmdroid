@@ -22,6 +22,9 @@ Preserve original notices and satisfy each dependency's license terms.
 | reqwest | MIT OR Apache-2.0 | Public registry HTTPS client |
 | rustls / webpki-roots / ring | Multiple permissive licenses; see each upstream notice | TLS implementation and public trust roots |
 | semver | MIT OR Apache-2.0 | Public package dependency constraints |
+| cap-std | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | Capability-scoped private volume access |
+| fs2 | MIT OR Apache-2.0 | Android/Unix/Windows OS file locks |
+| libc | MIT OR Apache-2.0 | Worker-local interrupt signal mask handling |
 | AndroidX / Jetpack Compose | Apache-2.0 | Native Android UI |
 | kotlinx.coroutines | Apache-2.0 | Main-thread-safe native calls |
 | JNA | LGPL-2.1-or-later OR Apache-2.0 | UniFFI native loading; use Apache-2.0 option |

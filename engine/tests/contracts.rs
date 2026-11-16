@@ -14,6 +14,53 @@ fn recipe() -> serde_json::Value {
     })
 }
 
+#[test]
+fn spec_rejects_ambiguous_guest_paths_and_invalid_process_values() {
+    for path in [
+        "relative",
+        "/data/../other",
+        "/data/./item",
+        "/data//item",
+        "/data/",
+        "/data\\item",
+        "/data\nitem",
+    ] {
+        let mut value = recipe();
+        value["working_dir"] = path.into();
+        assert!(
+            serde_json::from_value::<InstanceSpec>(value)
+                .unwrap()
+                .validate()
+                .is_err(),
+            "{path:?}"
+        );
+    }
+    for (field, value) in [
+        ("command", serde_json::json!("bad\u{0}command")),
+        ("args", serde_json::json!(["bad\u{0}arg"])),
+        ("env", serde_json::json!({"": "value"})),
+        ("env", serde_json::json!({"BAD=NAME": "value"})),
+        ("env", serde_json::json!({"NAME": "bad\u{0}value"})),
+        (
+            "mounts",
+            serde_json::json!([
+                {"source":{"type":"volume","source":"first"},"target":"/data","read_only":false},
+                {"source":{"type":"volume","source":"second"},"target":"/data","read_only":true}
+            ]),
+        ),
+    ] {
+        let mut spec = recipe();
+        spec[field] = value;
+        assert!(
+            serde_json::from_value::<InstanceSpec>(spec)
+                .unwrap()
+                .validate()
+                .is_err(),
+            "{field}"
+        );
+    }
+}
+
 fn catalog() -> serde_json::Value {
     serde_json::json!({"schema_version": 1, "packages": [{
         "id": "example-site", "name": "Example", "description": "Test fixture, not a real package",

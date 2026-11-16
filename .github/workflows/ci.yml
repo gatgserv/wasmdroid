@@ -37,6 +37,7 @@ jobs:
                   assert not any(key.startswith('wasmer') for key in manifest.get(section, {})), path
 
   runtime-probe:
+    timeout-minutes: 20
     strategy:
       matrix:
         include:

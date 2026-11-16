@@ -65,7 +65,17 @@ remain owner decisions. Internal Play upload requires owner account, application
 ID decision, signing setup, privacy/distribution review and explicit authorization.
 The current `dev.wasmdroid.app` ID is provisional. No policy approval is implied.
 
-## MVP (after Stage 0 exit)
+## MVP engine prerequisites (in progress)
+
+Tracked in [issue #3](https://github.com/gatgserv/wasmdroid/issues/3).
+Implemented prerequisites: CPU-bound WASIX host interruption with per-instance
+cleanup checks; durable lifecycle metadata/events and stale-revision protection;
+exclusive engine ownership/recovery; named volume data operations, read-only
+leases, traversal/symlink confinement and journaled removal recovery. General
+RuntimeDriver, actual guest mounts, Android service ownership and end-user
+lifecycle remain pending. Storage metadata is not evidence of guest execution.
+
+## Remaining MVP
 
 Lifecycle driver/supervisor, long-lived engine Foreground Service, safe network
 manager, volumes, registry install/uninstall progress, compiled module cache,

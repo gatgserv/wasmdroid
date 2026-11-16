@@ -1,4 +1,4 @@
-# Engine API v1 — foundation
+# Engine API v1 — contracts and durable storage
 
 The Rust types under `engine/src/api.rs` are the initial wire contract (serde,
 snake_case). API version is `1`. Only the driver crate may import `wasmer*`.
@@ -22,7 +22,10 @@ Limits are optional in the wire format; a future supervisor must select safe
 defaults and enforce them before accepting untrusted packages.
 
 Mount sources are tagged as `{"type":"volume","source":"data"}` or
-`{"type":"host_path","source":"..."}`. Targets are guest absolute paths.
+`{"type":"host_path","source":"..."}`. Targets and working directories are
+normalized absolute POSIX paths. Duplicate targets, traversal, backslashes and
+control characters are rejected. Process arguments/environment reject NUL and
+environment names reject empty names or `=`.
 Host path access requires a future explicit capability; accepting the wire type
 does not authorize access. Named volumes are independent of artifacts.
 Ports use `host_port`, `instance_port`, `protocol` (`tcp`/`udp`). Zero host port
@@ -51,16 +54,45 @@ probe is not yet an implementation of this lifecycle contract.
 
 Planned Engine operations follow `images.list/pull/remove`,
 `containers.create/start/stop/kill/remove/inspect/logs/attach`, `volumes.*`,
-`events.stream`. They remain unimplemented; no successful placeholder operations
-are exposed. The current UniFFI facade exports typed `EngineInfo`, catalog
-validation over the versioned JSON contract, and a finite built-in WASI probe.
+`events.stream`. General runtime lifecycle, guest mounts and streaming remain
+pending. The blocking UniFFI `EngineStorage` object now exposes actual named
+volume create/list/remove, local instance listing and paged durable events as
+versioned serde JSON. It owns an `EngineSession`; only the local endpoint is
+supported. Catalog validation, fixed registry/Python/HTTP harnesses, finite
+built-in WASI and storage/cancellation probes remain explicit development APIs.
+The future Android service must retain this owner and dispatch calls off UI threads.
 
 ## Durable storage
 
 SQLite migration 1 creates `artifacts`, `instances`, `volumes`, `port_bindings`,
-and `events`, with runtime kind/driver columns. Schema migration is transactional;
-unknown future schemas are rejected without downgrade. Installed artifact
-metadata can be saved/reloaded. Lifecycle persistence and event operations are pending.
+and `events`, with runtime kind/driver columns. Migration 2 adds lifecycle
+compare-and-swap versions, last-error data, referenced-volume constraints and a
+volume-removal journal. Existing instance mount references are backfilled in the
+same transaction; invalid legacy data rolls back the migration. Unknown future
+schemas are rejected without downgrade.
+
+`StateDb` supports create/list/inspect/transition/remove instance records and paged
+events. Every state mutation and its event commit atomically. Exit codes must
+agree with state; stale exit callbacks cannot overwrite a newer run. Referenced
+volumes cannot be deleted, including references from stopped instances. Instance
+removal preserves named-volume bytes. These metadata operations alone do not
+prove that a guest ran or stopped. Events exclude args, environment and mount paths.
+
+`EngineSession` takes a real exclusive OS lock before recovery. Active runtime
+owners and volume files retain the same lock. A second owner cannot falsely
+reconcile a live engine. After the last owner leaves, reopening marks interrupted
+running/paused/restarting records dead, records unknown exit rather than success,
+clears stale port bindings and appends recovery events.
+
+`VolumeManager` confines access to app-private named directories through filesystem
+capabilities. Read-only leases reject mutations; open files retain their lease and
+prevent removal. Relative traversal and symlink escape are denied. OS locks use
+`fs2` because the pinned Rust standard-library locks are unsupported on Android.
+Removal journals intent, renames data to private trash, commits metadata removal,
+then reclaims bytes. Reopening restores interrupted pre-commit removal or finishes
+committed cleanup. Ambiguous or unregistered data is preserved with an error.
+This tests process-interruption recovery, not filesystem durability under sudden
+power loss. These capabilities have not yet been adapted into a guest filesystem.
 
 The content store uses `store/blobs/sha256/<hex>`. Ingestion streams to a temporary
 file on the same filesystem, bounds bytes independently of Content-Length,

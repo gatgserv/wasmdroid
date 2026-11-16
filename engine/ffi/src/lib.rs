@@ -1,5 +1,108 @@
 uniffi::setup_scaffolding!();
 
+/// Durable data operations. The future service must own this object; all methods
+/// block and must run off the UI thread. Runtime lifecycle is a separate layer.
+#[derive(uniffi::Object)]
+pub struct EngineStorage {
+    session: std::sync::Mutex<wasmdroid_engine::session::EngineSession>,
+}
+
+impl From<wasmdroid_engine::EngineError> for BridgeError {
+    fn from(error: wasmdroid_engine::EngineError) -> Self {
+        Self::Operation {
+            reason: error.to_string(),
+        }
+    }
+}
+impl From<serde_json::Error> for BridgeError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Operation {
+            reason: error.to_string(),
+        }
+    }
+}
+
+#[uniffi::export]
+impl EngineStorage {
+    #[uniffi::constructor]
+    pub fn open(data_dir: String) -> Result<std::sync::Arc<Self>, BridgeError> {
+        let session = wasmdroid_engine::session::EngineSession::open(data_dir)?;
+        wasmdroid_engine::volumes::VolumeManager::open(&session)?;
+        Ok(std::sync::Arc::new(Self {
+            session: std::sync::Mutex::new(session),
+        }))
+    }
+    pub fn list_volumes(&self) -> Result<String, BridgeError> {
+        let session = self.session.lock().map_err(|_| BridgeError::Operation {
+            reason: "Engine storage lock failed".into(),
+        })?;
+        Ok(serde_json::to_string(&session.state().volumes()?)?)
+    }
+    pub fn create_volume(&self, name: String) -> Result<String, BridgeError> {
+        let session = self.session.lock().map_err(|_| BridgeError::Operation {
+            reason: "Engine storage lock failed".into(),
+        })?;
+        let manager = wasmdroid_engine::volumes::VolumeManager::open(&session)?;
+        Ok(serde_json::to_string(
+            &manager.create(&name, Default::default())?,
+        )?)
+    }
+    pub fn remove_volume(&self, name: String) -> Result<(), BridgeError> {
+        let session = self.session.lock().map_err(|_| BridgeError::Operation {
+            reason: "Engine storage lock failed".into(),
+        })?;
+        wasmdroid_engine::volumes::VolumeManager::open(&session)?.remove(&name)?;
+        Ok(())
+    }
+    pub fn list_instances(&self, endpoint_id: String) -> Result<String, BridgeError> {
+        if endpoint_id != "local" {
+            return Err(
+                wasmdroid_engine::EngineError::Unsupported("remote endpoint".into()).into(),
+            );
+        }
+        let session = self.session.lock().map_err(|_| BridgeError::Operation {
+            reason: "Engine storage lock failed".into(),
+        })?;
+        Ok(serde_json::to_string(
+            &session.state().instances(&endpoint_id)?,
+        )?)
+    }
+    pub fn events_after(&self, sequence: u64, limit: u32) -> Result<String, BridgeError> {
+        let session = self.session.lock().map_err(|_| BridgeError::Operation {
+            reason: "Engine storage lock failed".into(),
+        })?;
+        Ok(serde_json::to_string(
+            &session.state().events_after(sequence, limit)?,
+        )?)
+    }
+}
+
+#[uniffi::export]
+pub fn run_storage_probe(data_dir: String) -> Result<String, BridgeError> {
+    Ok(serde_json::to_string(
+        &wasmdroid_engine::storage_probe::run(std::path::Path::new(&data_dir))?,
+    )?)
+}
+
+/// Finite cancellation acceptance probe, not arbitrary guest execution.
+#[uniffi::export]
+pub fn run_cancellation_probe() -> Result<String, BridgeError> {
+    #[cfg(feature = "runtime")]
+    {
+        wasmdroid_wasmer_local::cancellation::run_probe()
+            .and_then(|result| Ok(serde_json::to_string(&result)?))
+            .map_err(|error| BridgeError::Operation {
+                reason: error.to_string(),
+            })
+    }
+    #[cfg(not(feature = "runtime"))]
+    {
+        Err(BridgeError::Operation {
+            reason: "Wasmer runtime is not included".into(),
+        })
+    }
+}
+
 #[derive(Debug, uniffi::Record)]
 pub struct EngineInfo {
     pub api_version: u32,

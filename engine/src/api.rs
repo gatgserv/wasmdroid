@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -228,11 +228,24 @@ impl InstanceSpec {
                 "endpoint and command are required".into(),
             ));
         }
+        if self.command.contains('\0')
+            || self.args.iter().any(|value| value.contains('\0'))
+            || self.env.iter().any(|(name, value)| {
+                name.is_empty() || name.contains(['=', '\0']) || value.contains('\0')
+            })
+        {
+            return Err(EngineError::Invalid(
+                "command, arguments or environment contain invalid values".into(),
+            ));
+        }
+        if let Some(path) = &self.working_dir {
+            validate_guest_path(path)?;
+        }
+        let mut targets = BTreeSet::new();
         for mount in &self.mounts {
-            if !mount.target.starts_with('/') || mount.target.split('/').any(|p| p == "..") {
-                return Err(EngineError::Invalid(
-                    "mount target must be absolute without traversal".into(),
-                ));
+            validate_guest_path(&mount.target)?;
+            if !targets.insert(&mount.target) {
+                return Err(EngineError::Invalid("duplicate mount target".into()));
             }
             if let MountSource::Volume(name) = &mount.source {
                 validate_name(name)?;
@@ -251,6 +264,23 @@ impl InstanceSpec {
         }
         Ok(())
     }
+}
+
+fn validate_guest_path(path: &str) -> Result<()> {
+    if !path.starts_with('/')
+        || path.contains('\\')
+        || path.chars().any(char::is_control)
+        || (path != "/"
+            && path
+                .split('/')
+                .skip(1)
+                .any(|part| part.is_empty() || part == "." || part == ".."))
+    {
+        return Err(EngineError::Invalid(
+            "guest path must be absolute and normalized".into(),
+        ));
+    }
+    Ok(())
 }
 
 pub fn validate_name(name: &str) -> Result<()> {

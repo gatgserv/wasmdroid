@@ -3,10 +3,14 @@ pub mod api;
 pub mod catalog;
 pub mod driver;
 pub mod installer;
+mod locking;
 pub mod network;
 pub mod registry;
+pub mod session;
 pub mod state;
+pub mod storage_probe;
 pub mod store;
+pub mod volumes;
 
 use thiserror::Error;
 

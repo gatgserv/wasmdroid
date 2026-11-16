@@ -15,8 +15,10 @@ An explicit native harness executes the real Python package offline on Android;
 it is not yet an arbitrary-command user runner or a full package-manager UI.
 An explicit HTTP harness now serves the real static-web-server package through
 an isolated virtual network and a managed host loopback port, with verified
-forced-stop cleanup. Background execution, general lifecycle operations and
-the remaining Stage 0 compatibility/distribution checks remain pending.
+forced-stop cleanup. CPU-only WASIX loops can now be interrupted independently.
+Durable instance metadata/events, exclusive engine recovery and private named
+volumes are implemented. Actual guest mounts, general runtime lifecycle,
+background execution and remaining Stage 0 checks are still pending.
 Physical Cranelift cold/warm measurements, a core-only Singlepass comparison and
 clean release artifact sizes are recorded in the runtime measurement report. The curated catalog is
 empty until packages have Android evidence. No Play compatibility claim is made.
