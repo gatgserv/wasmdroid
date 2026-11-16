@@ -1,0 +1,17 @@
+/target/
+/.tools/
+/.local/
+**/.gradle/
+**/.kotlin/
+**/build/
+**/local.properties
+**/jniLibs/
+**/generated/
+*.iml
+.idea/
+*.jks
+*.keystore
+*.hprof
+.env
+.env.*
+!.env.example

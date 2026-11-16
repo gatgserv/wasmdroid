@@ -1,0 +1,19 @@
+[package]
+name = "wasmdroid-ffi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+wasmer = ["dep:wasmdroid-wasmer-local"]
+
+[dependencies]
+wasmdroid-engine = { path = ".." }
+wasmdroid-wasmer-local = { path = "../drivers/wasmer-local", optional = true }
+uniffi.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

@@ -1,0 +1,13 @@
+[package]
+name = "wasmdroid-wasmer-local"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+wasmer = { version = "=7.4.2", default-features = false, features = ["sys", "cranelift", "wat"] }
+wasmer-wasix = { version = "=0.704.2", default-features = false, features = ["sys-minimal"] }
+wasmer-types = "=7.4.2"
+tokio = { version = "1", features = ["rt-multi-thread", "time", "net"] }
+anyhow = "1"
