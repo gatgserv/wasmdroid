@@ -87,54 +87,7 @@ pub fn run_offline_with_progress(
     let _guard = executor.enter();
     let tasks = TokioTaskManager::new(executor.handle().clone());
     let mut runtime = PluggableRuntime::new(Arc::new(tasks));
-    let mut containers = HashMap::new();
-    let mut source = InMemorySource::new();
-    for image in images {
-        let bytes = store.read_verified(&image.digest, image.size_bytes)?;
-        anyhow::ensure!(
-            bytes.len() as u64 == image.size_bytes,
-            "installed size mismatch"
-        );
-        let container = Container::from_bytes_and_version(bytes.into(), webc::Version::V3)?;
-        let named = image
-            .reference
-            .as_str()
-            .strip_prefix("wasmer.io/")
-            .context("unsupported registry in offline set")?;
-        let (name, version) = named
-            .rsplit_once('@')
-            .context("offline images must be version pinned")?;
-        let id = PackageId::Named(NamedPackageId {
-            full_name: name.into(),
-            version: version.parse()?,
-        });
-        let hash = WebcHash::parse_hex(image.digest.as_str().trim_start_matches("sha256:"))?;
-        let info = PackageInfo::from_manifest(id, container.manifest(), container.version())?;
-        // Descriptive only: OfflineLoader never opens URLs.
-        let location = format!(
-            "https://offline.invalid/{}",
-            image.digest.as_str().trim_start_matches("sha256:")
-        )
-        .parse()?;
-        source.add(PackageSummary {
-            pkg: info,
-            dist: DistributionInfo {
-                webc: location,
-                webc_sha256: hash,
-            },
-        });
-        containers.insert(hash, container);
-    }
-    let root_hash = WebcHash::parse_hex(root.digest.as_str().trim_start_matches("sha256:"))?;
-    let container = containers
-        .get(&root_hash)
-        .context("root package is missing from installed graph")?
-        .clone();
-    runtime
-        .set_source(source)
-        .set_package_loader(OfflineLoader { containers });
-    progress("resolving_offline_dependencies");
-    let package = executor.block_on(BinaryPackage::from_webc(&container, &runtime))?;
+    let package = load_verified_package(&executor, &mut runtime, store, root, images)?;
     progress("preparing_command");
     let selected = package
         .get_command(command)
@@ -199,7 +152,7 @@ pub fn run_offline_with_progress(
     })
 }
 
-fn capture_tail(
+pub(crate) fn capture_tail(
     mut input: Pipe,
     limit: usize,
     finished: Arc<AtomicBool>,
@@ -227,6 +180,63 @@ fn capture_tail(
         String::from_utf8_lossy(&retained.into_iter().collect::<Vec<_>>()).into_owned(),
         total > limit,
     ))
+}
+
+/// Shared verified offline graph loader for finite and supervised commands.
+pub(crate) fn load_verified_package(
+    executor: &tokio::runtime::Runtime,
+    runtime: &mut PluggableRuntime,
+    store: &ContentStore,
+    root: &Artifact,
+    images: &[Artifact],
+) -> Result<BinaryPackage> {
+    let mut containers = HashMap::new();
+    let mut source = InMemorySource::new();
+    for image in images {
+        let bytes = store.read_verified(&image.digest, image.size_bytes)?;
+        anyhow::ensure!(
+            bytes.len() as u64 == image.size_bytes,
+            "installed size mismatch"
+        );
+        let container = Container::from_bytes_and_version(bytes.into(), webc::Version::V3)?;
+        let named = image
+            .reference
+            .as_str()
+            .strip_prefix("wasmer.io/")
+            .context("unsupported registry in offline set")?;
+        let (name, version) = named
+            .rsplit_once('@')
+            .context("offline images must be version pinned")?;
+        let id = PackageId::Named(NamedPackageId {
+            full_name: name.into(),
+            version: version.parse()?,
+        });
+        let hash = WebcHash::parse_hex(image.digest.as_str().trim_start_matches("sha256:"))?;
+        let info = PackageInfo::from_manifest(id, container.manifest(), container.version())?;
+        // Descriptive only: OfflineLoader never opens URLs.
+        let location = format!(
+            "https://offline.invalid/{}",
+            image.digest.as_str().trim_start_matches("sha256:")
+        )
+        .parse()?;
+        source.add(PackageSummary {
+            pkg: info,
+            dist: DistributionInfo {
+                webc: location,
+                webc_sha256: hash,
+            },
+        });
+        containers.insert(hash, container);
+    }
+    let root_hash = WebcHash::parse_hex(root.digest.as_str().trim_start_matches("sha256:"))?;
+    let container = containers
+        .get(&root_hash)
+        .context("root package is missing from installed graph")?
+        .clone();
+    runtime
+        .set_source(source)
+        .set_package_loader(OfflineLoader { containers });
+    executor.block_on(BinaryPackage::from_webc(&container, runtime))
 }
 
 #[cfg(test)]

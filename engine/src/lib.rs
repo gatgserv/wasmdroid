@@ -3,6 +3,7 @@ pub mod api;
 pub mod catalog;
 pub mod driver;
 pub mod installer;
+pub mod network;
 pub mod registry;
 pub mod state;
 pub mod store;

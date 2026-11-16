@@ -4558,11 +4558,13 @@ dependencies = [
  "serde",
  "tokio",
  "url",
+ "virtual-net",
  "wasmdroid-engine",
  "wasmer",
  "wasmer-config",
  "wasmer-types",
  "wasmer-wasix",
+ "wasmer-wasix-types",
  "webc",
 ]
 

@@ -155,3 +155,146 @@ fn registry_python_probe(
         elapsed_ms: result.elapsed_ms,
     })
 }
+
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct HttpProbeInfo {
+    pub reference: String,
+    pub digest: String,
+    pub installed_images: u32,
+    pub url: String,
+    pub document_token: String,
+}
+
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct HttpProbeStopResult {
+    pub exit_code: i32,
+    pub stdout: String,
+    pub stderr: String,
+    pub elapsed_ms: u64,
+    pub forced: bool,
+    pub active_execution_tasks: u32,
+}
+
+/// Explicit live HTTP acceptance instance, owned until stop/drop. Product
+/// lifecycle and Android service ownership will use the neutral driver API.
+#[derive(uniffi::Object)]
+pub struct RegistryHttpProbe {
+    info: HttpProbeInfo,
+    #[cfg(feature = "wasmer")]
+    inner: std::sync::Mutex<wasmdroid_wasmer_local::http_execution::HttpInstance>,
+}
+
+#[uniffi::export]
+impl RegistryHttpProbe {
+    pub fn info(&self) -> HttpProbeInfo {
+        self.info.clone()
+    }
+
+    pub fn stop(&self) -> Result<HttpProbeStopResult, BridgeError> {
+        #[cfg(feature = "wasmer")]
+        {
+            let mut inner = self.inner.lock().map_err(|_| BridgeError::Operation {
+                reason: "HTTP instance lock failed".into(),
+            })?;
+            let result = inner.stop().map_err(|error| BridgeError::Operation {
+                reason: error.to_string(),
+            })?;
+            Ok(HttpProbeStopResult {
+                stdout: result.execution.stdout,
+                stderr: result.execution.stderr,
+                exit_code: result.execution.exit_code,
+                elapsed_ms: result.execution.elapsed_ms,
+                forced: result.forced,
+                active_execution_tasks: result.active_execution_tasks,
+            })
+        }
+        #[cfg(not(feature = "wasmer"))]
+        {
+            Err(BridgeError::Operation {
+                reason: "Wasmer runtime is not included".into(),
+            })
+        }
+    }
+}
+
+#[uniffi::export]
+pub fn start_registry_http_probe(
+    data_dir: String,
+    observer: Option<Box<dyn ProbeObserver>>,
+) -> Result<std::sync::Arc<RegistryHttpProbe>, BridgeError> {
+    #[cfg(feature = "wasmer")]
+    {
+        registry_http_probe(&data_dir, observer.as_deref())
+            .map(std::sync::Arc::new)
+            .map_err(|error| BridgeError::Operation {
+                reason: error.to_string(),
+            })
+    }
+    #[cfg(not(feature = "wasmer"))]
+    {
+        let _ = (data_dir, observer);
+        Err(BridgeError::Operation {
+            reason: "Wasmer runtime is not included".into(),
+        })
+    }
+}
+
+#[cfg(feature = "wasmer")]
+fn registry_http_probe(
+    data_dir: &str,
+    observer: Option<&dyn ProbeObserver>,
+) -> Result<RegistryHttpProbe, Box<dyn std::error::Error>> {
+    use wasmdroid_engine::{
+        api::ArtifactReference,
+        installer::{InstallLimits, Installer},
+        registry::wasmer::WasmerRegistry,
+        state::StateDb,
+        store::ContentStore,
+    };
+    let root = std::path::Path::new(data_dir);
+    std::fs::create_dir_all(root)?;
+    let registry = WasmerRegistry::new()?;
+    let store = ContentStore::open(root.join("store"))?;
+    let state = StateDb::open(root.join("engine.sqlite"))?;
+    let installer = Installer {
+        registry: &registry,
+        store: &store,
+        state: &state,
+        limits: InstallLimits::default(),
+    };
+    let graph = installer.pull(
+        &ArtifactReference::parse("wasmer.io/wasmer/static-web-server@2.44.0")?,
+        &mut |progress| {
+            if progress.bytes_downloaded == 0
+                && let Some(observer) = observer
+            {
+                observer.on_phase(format!(
+                    "{:?}:{}",
+                    progress.phase,
+                    progress.reference.as_str()
+                ));
+            }
+        },
+    )?;
+    let inner = wasmdroid_wasmer_local::http_execution::HttpInstance::start(
+        &store,
+        &graph.root,
+        &graph.images,
+        &mut |phase| {
+            if let Some(observer) = observer {
+                observer.on_phase(phase.into());
+            }
+        },
+    )?;
+    let info = HttpProbeInfo {
+        reference: graph.root.reference.as_str().into(),
+        digest: graph.root.digest.as_str().into(),
+        installed_images: graph.images.len() as u32,
+        url: inner.url().into(),
+        document_token: inner.document_token().into(),
+    };
+    Ok(RegistryHttpProbe {
+        info,
+        inner: std::sync::Mutex::new(inner),
+    })
+}
