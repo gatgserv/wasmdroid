@@ -91,30 +91,42 @@ class HttpProbeTest {
     @Test fun simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val directory = File(context.filesDir, "registry-probe").absolutePath
-        val first = startRegistryHttpProbe(directory, null)
+        fun observer(name: String) = object : ProbeObserver {
+            override fun onPhase(phase: String) { evidence("HTTP isolation $name: $phase") }
+        }
+        val first = startRegistryHttpProbe(directory, observer("first"))
         try {
-            val second = startRegistryHttpProbe(directory, null)
+            val second = startRegistryHttpProbe(directory, observer("second"))
             try {
+                evidence("HTTP isolation: both instances started")
                 val one = first.info()
                 val two = second.info()
                 assertNotEquals(one.url, two.url)
                 assertNotEquals(one.documentToken, two.documentToken)
                 val firstBody = body(one.url)
+                evidence("HTTP isolation: first response received")
                 val secondBody = body(two.url)
+                evidence("HTTP isolation: second response received")
                 assertTrue(firstBody.contains("<p>${one.documentToken}</p>"))
                 assertFalse(firstBody.contains("<p>${two.documentToken}</p>"))
                 assertTrue(secondBody.contains("<p>${two.documentToken}</p>"))
                 assertFalse(secondBody.contains("<p>${one.documentToken}</p>"))
                 assertEquals(0u, first.stop().activeExecutionTasks)
+                evidence("HTTP isolation: first stopped")
                 assertTrue(body(two.url).contains("<p>${two.documentToken}</p>"))
                 evidence("Two guest servers used private port 8080 and distinct host ports/document roots; second remained reachable after first stopped")
             } finally {
+                evidence("HTTP isolation: stopping second")
                 assertEquals(0u, second.stop().activeExecutionTasks)
+                evidence("HTTP isolation: closing second")
                 second.close()
+                evidence("HTTP isolation: second closed")
             }
         } finally {
+            evidence("HTTP isolation: stopping/closing first")
             assertEquals(0u, first.stop().activeExecutionTasks)
             first.close()
+            evidence("HTTP isolation: first closed")
         }
     }
 }
