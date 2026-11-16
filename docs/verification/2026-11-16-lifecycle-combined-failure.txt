@@ -1,0 +1,317 @@
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.EngineBridgeTest:
+INSTRUMENTATION_STATUS: test=builtInWasiModuleExecutesWhenRuntimeIsIncluded
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=builtInWasiModuleExecutesWhenRuntimeIsIncluded
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=invalidCatalogCrossesErrorBoundary
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=invalidCatalogCrossesErrorBoundary
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=packagedNativeLibraryAnswers
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=packagedNativeLibraryAnswers
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.RegistryProbeTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.RegistryProbeTest:
+INSTRUMENTATION_STATUS: test=downloadsVerifiedWebcAndExecutesPythonInGuestFilesystem
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.RegistryProbeTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=downloadsVerifiedWebcAndExecutesPythonInGuestFilesystem
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.HttpProbeTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.HttpProbeTest:
+INSTRUMENTATION_STATUS: test=registryServerRespondsThroughManagedLoopbackAndStops
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=WasmDroid HTTP phase: Resolving:wasmer.io/wasmer/static-web-server@2.44.0
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=WasmDroid HTTP phase: parsing_verified_webc
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=WasmDroid HTTP phase: compiling_and_starting_http
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=WasmDroid HTTP phase: http_port_reserved
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP response: status=200
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=Verified HTTP body marker: WASMDROID_HTTP_OK
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP response: status=200
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=Verified HTTP body marker: WASMDROID_HTTP_OK
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP stop: exit=27, forced=true, activeTasks=0, elapsed=7323 ms, stderr=
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.HttpProbeTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=registryServerRespondsThroughManagedLoopbackAndStops
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.HttpProbeTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=HTTP isolation first: Resolving:wasmer.io/wasmer/static-web-server@2.44.0
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation first: parsing_verified_webc
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation first: compiling_and_starting_http
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation first: http_port_reserved
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation second: Resolving:wasmer.io/wasmer/static-web-server@2.44.0
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation second: parsing_verified_webc
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation second: compiling_and_starting_http
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation second: http_port_reserved
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation: both instances started
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation: first response received
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation: second response received
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation: first stopped
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=Two guest servers used private port 8080 and distinct host ports/document roots; second remained reachable after first stopped
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation: stopping second
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation: stopping/closing first
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP isolation: first closed
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.HttpProbeTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stack=dev.wasmdroid.engine.BridgeException$Operation: reason=guest status finished but 1 execution tasks are still active
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2195)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverter.liftFromRustBuffer(wasmdroid_ffi.kt:200)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterRustBuffer.lift(wasmdroid_ffi.kt:217)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2181)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2180)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.uniffiCheckCallStatus(wasmdroid_ffi.kt:284)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.access$uniffiCheckCallStatus(wasmdroid_ffi.kt:1)
+	at dev.wasmdroid.engine.RegistryHttpProbe.stop(wasmdroid_ffi.kt:2477)
+	at dev.wasmdroid.app.HttpProbeTest.simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops(HttpProbeTest.kt:120)
+
+INSTRUMENTATION_STATUS: stream=
+Error in simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops(dev.wasmdroid.app.HttpProbeTest):
+dev.wasmdroid.engine.BridgeException$Operation: reason=guest status finished but 1 execution tasks are still active
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2195)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverter.liftFromRustBuffer(wasmdroid_ffi.kt:200)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterRustBuffer.lift(wasmdroid_ffi.kt:217)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2181)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2180)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.uniffiCheckCallStatus(wasmdroid_ffi.kt:284)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.access$uniffiCheckCallStatus(wasmdroid_ffi.kt:1)
+	at dev.wasmdroid.engine.RegistryHttpProbe.stop(wasmdroid_ffi.kt:2477)
+	at dev.wasmdroid.app.HttpProbeTest.simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops(HttpProbeTest.kt:120)
+
+INSTRUMENTATION_STATUS: test=simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.CancellationProbeTest
+INSTRUMENTATION_STATUS: current=7
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.CancellationProbeTest:
+INSTRUMENTATION_STATUS: test=interruptsCpuBoundWasixWithoutStoppingAnotherInstance
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.CancellationProbeTest
+INSTRUMENTATION_STATUS: current=7
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stack=dev.wasmdroid.engine.BridgeException$Operation: reason=CPU-loop execution did not actually unwind; registered signal masks: ["0000000080001004"]
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2195)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverter.liftFromRustBuffer(wasmdroid_ffi.kt:200)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterRustBuffer.lift(wasmdroid_ffi.kt:217)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2181)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2180)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.uniffiCheckCallStatus(wasmdroid_ffi.kt:284)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.access$uniffiCheckCallStatus(wasmdroid_ffi.kt:1)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.runCancellationProbe(wasmdroid_ffi.kt:2452)
+	at dev.wasmdroid.app.CancellationProbeTest.interruptsCpuBoundWasixWithoutStoppingAnotherInstance(CancellationProbeTest.kt:16)
+
+INSTRUMENTATION_STATUS: stream=
+Error in interruptsCpuBoundWasixWithoutStoppingAnotherInstance(dev.wasmdroid.app.CancellationProbeTest):
+dev.wasmdroid.engine.BridgeException$Operation: reason=CPU-loop execution did not actually unwind; registered signal masks: ["0000000080001004"]
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2195)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverter.liftFromRustBuffer(wasmdroid_ffi.kt:200)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterRustBuffer.lift(wasmdroid_ffi.kt:217)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2181)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2180)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.uniffiCheckCallStatus(wasmdroid_ffi.kt:284)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.access$uniffiCheckCallStatus(wasmdroid_ffi.kt:1)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.runCancellationProbe(wasmdroid_ffi.kt:2452)
+	at dev.wasmdroid.app.CancellationProbeTest.interruptsCpuBoundWasixWithoutStoppingAnotherInstance(CancellationProbeTest.kt:16)
+
+INSTRUMENTATION_STATUS: test=interruptsCpuBoundWasixWithoutStoppingAnotherInstance
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.StorageProbeTest
+INSTRUMENTATION_STATUS: current=8
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.StorageProbeTest:
+INSTRUMENTATION_STATUS: test=generatedStorageObjectCreatesListsAndRemovesOnlyOwnedFixtureVolume
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.StorageProbeTest
+INSTRUMENTATION_STATUS: current=8
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=generatedStorageObjectCreatesListsAndRemovesOnlyOwnedFixtureVolume
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.StorageProbeTest
+INSTRUMENTATION_STATUS: current=9
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=privateVolumesPersistAndEnforceReadOnlyLeasesAndPathIsolation
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=WASMDROID_STORAGE_JSON={"persisted_bytes":27,"read_only_enforced":true,"lease_prevented_remove":true,"escape_denied":true,"removed":true}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.StorageProbeTest
+INSTRUMENTATION_STATUS: current=9
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=9
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=privateVolumesPersistAndEnforceReadOnlyLeasesAndPathIsolation
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 74.094
+There were 2 failures:
+1) simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops(dev.wasmdroid.app.HttpProbeTest)
+dev.wasmdroid.engine.BridgeException$Operation: reason=guest status finished but 1 execution tasks are still active
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2195)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverter.liftFromRustBuffer(wasmdroid_ffi.kt:200)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterRustBuffer.lift(wasmdroid_ffi.kt:217)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2181)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2180)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.uniffiCheckCallStatus(wasmdroid_ffi.kt:284)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.access$uniffiCheckCallStatus(wasmdroid_ffi.kt:1)
+	at dev.wasmdroid.engine.RegistryHttpProbe.stop(wasmdroid_ffi.kt:2477)
+	at dev.wasmdroid.app.HttpProbeTest.simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops(HttpProbeTest.kt:120)
+2) interruptsCpuBoundWasixWithoutStoppingAnotherInstance(dev.wasmdroid.app.CancellationProbeTest)
+dev.wasmdroid.engine.BridgeException$Operation: reason=CPU-loop execution did not actually unwind; registered signal masks: ["0000000080001004"]
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2195)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverter.liftFromRustBuffer(wasmdroid_ffi.kt:200)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterRustBuffer.lift(wasmdroid_ffi.kt:217)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:2190)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2181)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:2180)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.uniffiCheckCallStatus(wasmdroid_ffi.kt:284)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.access$uniffiCheckCallStatus(wasmdroid_ffi.kt:1)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.runCancellationProbe(wasmdroid_ffi.kt:2452)
+	at dev.wasmdroid.app.CancellationProbeTest.interruptsCpuBoundWasixWithoutStoppingAnotherInstance(CancellationProbeTest.kt:16)
+
+FAILURES!!!
+Tests run: 9,  Failures: 2
+
+
+INSTRUMENTATION_CODE: -1

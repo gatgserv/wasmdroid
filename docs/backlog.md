@@ -68,12 +68,19 @@ The current `dev.wasmdroid.app` ID is provisional. No policy approval is implied
 ## MVP engine prerequisites (in progress)
 
 Tracked in [issue #3](https://github.com/gatgserv/wasmdroid/issues/3).
-Implemented prerequisites: CPU-bound WASIX host interruption with per-instance
-cleanup checks; durable lifecycle metadata/events and stale-revision protection;
+Implemented prerequisites: durable lifecycle metadata/events and stale-revision protection;
 exclusive engine ownership/recovery; named volume data operations, read-only
 leases, traversal/symlink confinement and journaled removal recovery. General
 RuntimeDriver, actual guest mounts, Android service ownership and end-user
-lifecycle remain pending. Storage metadata is not evidence of guest execution.
+lifecycle remain pending. Experimental host interruption passes focused checks
+but failed the combined phone suite (HTTP cleanup and CPU-loop exit). It is not
+accepted as reliable. The owner clarified a common supervisor with one service
+controller/execution group per package; stopping one service must stop all its
+descendants and preserve other services. See the service supervision design.
+Storage metadata is not evidence of guest execution.
+
+See [the current storage and cancellation evidence](verification/2026-11-16-lifecycle-storage.md)
+and [the service supervision design](design/service-supervision.md).
 
 ## Remaining MVP
 

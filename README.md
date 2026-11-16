@@ -15,7 +15,9 @@ An explicit native harness executes the real Python package offline on Android;
 it is not yet an arbitrary-command user runner or a full package-manager UI.
 An explicit HTTP harness now serves the real static-web-server package through
 an isolated virtual network and a managed host loopback port, with verified
-forced-stop cleanup. CPU-only WASIX loops can now be interrupted independently.
+forced-stop cleanup on the earlier verified revision. Experimental native CPU
+interruption passes focused tests but has failures in the combined suite; it is
+not accepted as a reliable general stop mechanism.
 Durable instance metadata/events, exclusive engine recovery and private named
 volumes are implemented. Actual guest mounts, general runtime lifecycle,
 background execution and remaining Stage 0 checks are still pending.
@@ -126,6 +128,10 @@ The guest network is inbound-only; it never receives a host networking backend.
 Stop reports whether SIGKILL escalation was needed and verifies execution work
 has unwound, independently of the WASIX process status. See the
 [HTTP verification report](docs/verification/2026-11-16-loopback-http.md).
+
+New experimental interruption changes have combined-suite failures; the earlier
+HTTP report does not certify them. See the [current storage/cancellation report](docs/verification/2026-11-16-lifecycle-storage.md)
+and [common-supervisor service design](docs/design/service-supervision.md).
 
 Explicit development measurements are documented in
 [the runtime report](docs/verification/2026-11-16-runtime-measurements.md).
