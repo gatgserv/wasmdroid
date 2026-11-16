@@ -1,5 +1,8 @@
 //! Stage 0 finite WASI probe; intentionally not a lifecycle driver yet.
 //! Host filesystem and host networking are not enabled.
+#[cfg(not(any(feature = "cranelift", feature = "singlepass")))]
+compile_error!("Select the cranelift or singlepass driver feature");
+pub mod benchmark;
 pub mod http_execution;
 mod loopback;
 mod tasks;

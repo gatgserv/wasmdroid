@@ -88,6 +88,20 @@ pub fn run_offline_with_progress(
     let tasks = TokioTaskManager::new(executor.handle().clone());
     let mut runtime = PluggableRuntime::new(Arc::new(tasks));
     let package = load_verified_package(&executor, &mut runtime, store, root, images)?;
+    let mut result =
+        execute_verified_command(Arc::new(runtime), &package, command, args, progress)?;
+    result.elapsed_ms = start.elapsed().as_millis().try_into().unwrap_or(u64::MAX);
+    Ok(result)
+}
+
+pub(crate) fn execute_verified_command(
+    runtime: Arc<dyn wasmer_wasix::Runtime + Send + Sync>,
+    package: &BinaryPackage,
+    command: &str,
+    args: &[String],
+    progress: &mut dyn FnMut(&str),
+) -> Result<ExecutionResult> {
+    let start = Instant::now();
     progress("preparing_command");
     let selected = package
         .get_command(command)
@@ -116,11 +130,7 @@ pub fn run_offline_with_progress(
             .with_forward_host_env(false)
             .with_stdout(Box::new(stdout))
             .with_stderr(Box::new(stderr));
-        runner.run_command(
-            command,
-            &package,
-            RuntimeOrEngine::Runtime(Arc::new(runtime)),
-        )
+        runner.run_command(command, package, RuntimeOrEngine::Runtime(runtime))
     };
     finished.store(true, Ordering::Release);
     progress("draining_output");

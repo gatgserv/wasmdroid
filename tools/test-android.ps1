@@ -3,6 +3,7 @@ param(
     [string]$Abis = 'x86_64',
     [ValidateSet('true', 'false')][string]$RuntimeEnabled = 'true',
     [ValidateSet('debug', 'release')][string]$RustProfile = 'debug',
+    [ValidateSet('cranelift', 'singlepass')][string]$Compiler = 'cranelift',
     [ValidateRange(30, 600)][int]$TimeoutSeconds = 180,
     [ValidatePattern('^[a-zA-Z0-9_.$,]+$')][string]$TestClass = 'dev.wasmdroid.app.EngineBridgeTest',
     [switch]$SkipBuild
@@ -14,7 +15,7 @@ $adb = Join-Path $sdk 'platform-tools\adb.exe'
 Push-Location $repo
 try {
     if (-not $SkipBuild) {
-        & ./android/gradlew.bat -p android :app:assembleDebug :app:assembleDebugAndroidTest "-PwasmdroidAbis=$Abis" "-PwasmdroidRuntime=$RuntimeEnabled" "-PwasmdroidRustProfile=$RustProfile"
+        & ./android/gradlew.bat -p android :app:assembleDebug :app:assembleDebugAndroidTest "-PwasmdroidAbis=$Abis" "-PwasmdroidRuntime=$RuntimeEnabled" "-PwasmdroidRustProfile=$RustProfile" "-PwasmdroidCompiler=$Compiler"
         if ($LASTEXITCODE -ne 0) { throw 'Android build failed' }
     }
     & $adb -s $Serial get-state

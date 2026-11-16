@@ -7,6 +7,7 @@ plugins {
 val nativeAbis = providers.gradleProperty("wasmdroidAbis").orElse("arm64-v8a")
 val runtimeEnabled = providers.gradleProperty("wasmdroidRuntime").orElse("false")
 val rustProfile = providers.gradleProperty("wasmdroidRustProfile").orElse("debug")
+val runtimeCompiler = providers.gradleProperty("wasmdroidCompiler").orElse("cranelift")
 val prepareEngine by tasks.registering(Exec::class) {
     workingDir(rootProject.projectDir.parentFile)
     // Explicit task inputs: the generated Kotlin and native library must match.
@@ -18,10 +19,11 @@ val prepareEngine by tasks.registering(Exec::class) {
     inputs.property("abis", nativeAbis)
     inputs.property("runtime", runtimeEnabled)
     inputs.property("rustProfile", rustProfile)
+    inputs.property("compiler", runtimeCompiler)
     outputs.dir(layout.buildDirectory.dir("generated/uniffi"))
     outputs.dir(layout.buildDirectory.dir("generated/jniLibs"))
     commandLine("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-        "tools/build-native.ps1", "-Abis", nativeAbis.get(), "-RuntimeEnabled", runtimeEnabled.get(), "-RustProfile", rustProfile.get())
+        "tools/build-native.ps1", "-Abis", nativeAbis.get(), "-RuntimeEnabled", runtimeEnabled.get(), "-RustProfile", rustProfile.get(), "-Compiler", runtimeCompiler.get())
 }
 
 android {
@@ -48,6 +50,15 @@ android {
     packaging { jniLibs.useLegacyPackaging = false }
 }
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
+androidComponents {
+    beforeVariants(selector().withBuildType("release")) { variant ->
+        // BUSL Singlepass is only an explicitly selected development experiment.
+        // Production/distribution requires a separate license decision.
+        if (runtimeEnabled.get() == "true" && runtimeCompiler.get() == "singlepass") {
+            variant.enable = false
+        }
+    }
+}
 tasks.named("preBuild") { dependsOn(prepareEngine) }
 
 dependencies {

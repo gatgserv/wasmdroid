@@ -37,12 +37,19 @@ jobs:
                   assert not any(key.startswith('wasmer') for key in manifest.get(section, {})), path
 
   runtime-probe:
+    strategy:
+      matrix:
+        include:
+          - compiler: cranelift
+            ffi_feature: wasmer
+          - compiler: singlepass
+            ffi_feature: singlepass
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.95.0
-      - run: cargo test --locked -p wasmdroid-wasmer-local
-      - run: cargo clippy --locked -p wasmdroid-wasmer-local -p wasmdroid-ffi --features wasmdroid-ffi/wasmer --all-targets -- -D warnings
+      - run: cargo test --locked -p wasmdroid-wasmer-local --no-default-features --features '${{ matrix.compiler }}'
+      - run: cargo clippy --locked -p wasmdroid-wasmer-local -p wasmdroid-ffi --no-default-features --features 'wasmdroid-wasmer-local/${{ matrix.compiler }},wasmdroid-ffi/${{ matrix.ffi_feature }}' --all-targets -- -D warnings
 
   android:
     runs-on: windows-latest
