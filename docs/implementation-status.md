@@ -9,12 +9,12 @@ No release/merge/production action is implied by a completed local feature.
 | --- | --- | --- |
 | Rust monorepo, native Compose bridge, license | Foundation verification report | Keep builds reproducible and notices complete |
 | Runtime-neutral serde API, driver/registry boundaries, endpoint | Initial contracts and regression tests | Full operations and capability enforcement |
-| Public repository and CI | Approved baseline main, open PR #2; all four jobs passed on fbcf75a | Validate each new submitted revision; leave merge to owner |
+| Public repository and CI | Approved baseline main, open PR #2; all four jobs passed on 43ecdc5 | Validate each new submitted revision; leave merge to owner |
 | Registry search and pinned resolution | Actual live GraphQL requests, hash/command/license metadata | User-facing advanced search, offline/error UX |
 | Verified downloads and installed cache | CAS and graph transaction regressions; real Python/Bash/Coreutils/HTTP blobs | Cancellation, quotas, manifests/index, GC, image removal |
 | WebC execution and dependencies | Actual Python tests on API 36 x86_64 and physical Android 15/API 35 arm64 | Generalized lifecycle driver/supervision |
 | WASIX loopback server | Physical arm64 HTTP 200, private virtual port/root per instance; managed host port and forced-stop cleanup | Generalize beyond the fixed acceptance recipe |
-| Runtime comparison and measurements | Debug foundation APK size only | Optimized Cranelift/Singlepass/LLVM feasibility, APK/AAB size, cold/warm startup, peak memory |
+| Runtime comparison and measurements | Physical Cranelift Python cold/warm and process peak RSS; clean unsigned release APK/AAB; Singlepass core-only measurements and Python rejection | LLVM build/license prerequisites and actual measurements if selected; release/min-API/16 KiB execution and persistent-cache warm starts |
 | Curated web catalog and recipes | Versioned validator; empty catalog | Actual Android-tested web applications, reviewed licenses, trustworthy catalog updates |
 | Product GUI designs before implementation | Interactive Store/My Apps/details/settings proposal presented before implementation | Implement accessible, localized Compose screens and states |
 | Install/start/stop/restart/remove lifecycle | State-machine contract only | Persistent instances, truthful states, cancellation, process exit/kill semantics |

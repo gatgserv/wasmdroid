@@ -41,9 +41,17 @@ A physical Android 15/API 35 arm64 phone passed the live Python suite using the
 optimized Rust runtime (55.882 seconds for the whole test, including registry
 work) and all three bridge regressions. The physical arm64 HTTP harness now returns
 real responses, isolates simultaneous instances, and confirms forced-stop cleanup.
-The compiler/measurement matrix remains pending; S0-2 is still in progress.
+Cranelift cold/warm/process-memory measurements and clean release sizes are now
+recorded; Singlepass only supports the tested core workload and rejects Python.
+LLVM build/license prerequisites and further compatibility checks remain visible;
+S0-2 is still in progress.
 Evidence: [registry/Python verification](verification/2026-11-16-registry-python.md)
 and [loopback HTTP verification](verification/2026-11-16-loopback-http.md).
+
+Current measurements: [physical runtime report](verification/2026-11-16-runtime-measurements.md).
+The default Cranelift compiler is MIT; optional Singlepass/LLVM 7.4.2 use separate
+BUSL terms and require an owner/expert production licensing decision. No permissive
+fallback or distribution approval is implied by a development experiment.
 
 Compare supported compiler backends and measure release APK bytes, first-start
 compile milliseconds, warm-start milliseconds and peak memory bytes. Measurements

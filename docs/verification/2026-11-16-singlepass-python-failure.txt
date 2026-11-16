@@ -1,0 +1,125 @@
+Pre-commit development attempt before 4b0c9fd; exact working-tree revision not recorded.
+Pinned Wasmer Singlepass 7.4.2; Android arm64; Python package 3.13.20.
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.EngineBridgeTest:
+INSTRUMENTATION_STATUS: test=builtInWasiModuleExecutesWhenRuntimeIsIncluded
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=builtInWasiModuleExecutesWhenRuntimeIsIncluded
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=invalidCatalogCrossesErrorBoundary
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=invalidCatalogCrossesErrorBoundary
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=packagedNativeLibraryAnswers
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=packagedNativeLibraryAnswers
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.RuntimeBenchmarkTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.RuntimeBenchmarkTest:
+INSTRUMENTATION_STATUS: test=measureVerifiedPythonColdAndSameProcessWarmRuns
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=benchmark_registry_setup_excluded_from_timings
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=benchmark_cold_compile
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.RuntimeBenchmarkTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stack=dev.wasmdroid.engine.BridgeException$Operation: reason=compile error: Validate("exceptions proposal not enabled (at offset 0x18c8)")
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:1785)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverter.liftFromRustBuffer(wasmdroid_ffi.kt:200)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverterRustBuffer.lift(wasmdroid_ffi.kt:217)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:1771)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:1770)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.uniffiCheckCallStatus(wasmdroid_ffi.kt:284)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.access$uniffiCheckCallStatus(wasmdroid_ffi.kt:1)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.runRegistryBenchmark(wasmdroid_ffi.kt:2005)
+	at dev.wasmdroid.app.RuntimeBenchmarkTest.measureVerifiedPythonColdAndSameProcessWarmRuns(RuntimeBenchmarkTest.kt:28)
+
+INSTRUMENTATION_STATUS: stream=
+Error in measureVerifiedPythonColdAndSameProcessWarmRuns(dev.wasmdroid.app.RuntimeBenchmarkTest):
+dev.wasmdroid.engine.BridgeException$Operation: reason=compile error: Validate("exceptions proposal not enabled (at offset 0x18c8)")
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:1785)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverter.liftFromRustBuffer(wasmdroid_ffi.kt:200)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverterRustBuffer.lift(wasmdroid_ffi.kt:217)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:1771)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:1770)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.uniffiCheckCallStatus(wasmdroid_ffi.kt:284)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.access$uniffiCheckCallStatus(wasmdroid_ffi.kt:1)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.runRegistryBenchmark(wasmdroid_ffi.kt:2005)
+	at dev.wasmdroid.app.RuntimeBenchmarkTest.measureVerifiedPythonColdAndSameProcessWarmRuns(RuntimeBenchmarkTest.kt:28)
+
+INSTRUMENTATION_STATUS: test=measureVerifiedPythonColdAndSameProcessWarmRuns
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 3.251
+There was 1 failure:
+1) measureVerifiedPythonColdAndSameProcessWarmRuns(dev.wasmdroid.app.RuntimeBenchmarkTest)
+dev.wasmdroid.engine.BridgeException$Operation: reason=compile error: Validate("exceptions proposal not enabled (at offset 0x18c8)")
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:1785)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.read(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverter.liftFromRustBuffer(wasmdroid_ffi.kt:200)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.liftFromRustBuffer(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverterRustBuffer.lift(wasmdroid_ffi.kt:217)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.FfiConverterTypeBridgeError.lift(wasmdroid_ffi.kt:1780)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:1771)
+	at dev.wasmdroid.engine.BridgeException$ErrorHandler.lift(wasmdroid_ffi.kt:1770)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.uniffiCheckCallStatus(wasmdroid_ffi.kt:284)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.access$uniffiCheckCallStatus(wasmdroid_ffi.kt:1)
+	at dev.wasmdroid.engine.Wasmdroid_ffiKt.runRegistryBenchmark(wasmdroid_ffi.kt:2005)
+	at dev.wasmdroid.app.RuntimeBenchmarkTest.measureVerifiedPythonColdAndSameProcessWarmRuns(RuntimeBenchmarkTest.kt:28)
+
+FAILURES!!!
+Tests run: 4,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

@@ -16,7 +16,9 @@ it is not yet an arbitrary-command user runner or a full package-manager UI.
 An explicit HTTP harness now serves the real static-web-server package through
 an isolated virtual network and a managed host loopback port, with verified
 forced-stop cleanup. Background execution, general lifecycle operations and
-the Stage 0 compiler/measurement matrix remain pending. The curated catalog is
+the remaining Stage 0 compatibility/distribution checks remain pending.
+Physical Cranelift cold/warm measurements, a core-only Singlepass comparison and
+clean release artifact sizes are recorded in the runtime measurement report. The curated catalog is
 empty until packages have Android evidence. No Play compatibility claim is made.
 
 ## Layout
@@ -123,9 +125,17 @@ Stop reports whether SIGKILL escalation was needed and verifies execution work
 has unwound, independently of the WASIX process status. See the
 [HTTP verification report](docs/verification/2026-11-16-loopback-http.md).
 
+Explicit development measurements are documented in
+[the runtime report](docs/verification/2026-11-16-runtime-measurements.md).
+`-Compiler singlepass` selects a non-production experiment; its Android release
+variant is disabled. Cranelift remains the default. Warm benchmark relaunches use
+a same-process memory cache, not persistent compiled files.
+
 ## License
 
 WasmDroid is licensed under [Apache-2.0](LICENSE). Dependencies retain their own
-licenses. Wasmer is MIT; its copyright and license must accompany distributions.
+licenses. The default Wasmer core/WASIX/Cranelift runtime is MIT; its copyright
+and license must accompany distributions. Singlepass/LLVM compiler crates have
+separate BUSL licenses; see THIRD_PARTY_NOTICES.md.
 Registry packages are separate works and require individual license review.
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

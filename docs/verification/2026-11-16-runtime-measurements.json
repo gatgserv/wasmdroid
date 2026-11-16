@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "tested_revision": "4b0c9fd40ee39b40761e7453caf8d2b8841f4791",
+  "device": {
+    "model": "Sony G8142",
+    "android_api": 35,
+    "abi": "arm64-v8a",
+    "page_size_bytes": 4096
+  },
+  "measurement_variant": "Android debug-signed; Rust release optimization",
+  "cranelift": {
+    "core": {
+      "schema_version": 1,
+      "backend": "cranelift",
+      "iterations_per_sample": 1000000,
+      "cold_compile_us": 5127,
+      "instantiate_us": 727,
+      "execution_us": [
+        3394,
+        3362,
+        3537,
+        3401,
+        3318
+      ],
+      "checksum": 507449365,
+      "process_rss_bytes": 132177920,
+      "process_peak_rss_bytes": 132177920
+    },
+    "python": {
+      "schema_version": 1,
+      "backend": "cranelift",
+      "reference": "wasmer.io/python/python@3.13.20",
+      "digest": "sha256:a9fa8202f1bf6a4eca8d31ee5f2b1970c8f45af5c5520cc954d28a133333d8e7",
+      "graph_prepare_us": 1069645,
+      "cold_compile_us": 34589410,
+      "cold_start_to_exit_us": 35184192,
+      "warm_cache_lookup_us": 101,
+      "warm_start_to_exit_us": [
+        606322,
+        242222,
+        606122
+      ],
+      "outputs": [
+        {
+          "exit_code": 0,
+          "stdout": "WASMDROID_BENCHMARK_OK 4999950000 198314134\n",
+          "stderr": "",
+          "elapsed_ms": 594,
+          "stdout_truncated": false,
+          "stderr_truncated": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "WASMDROID_BENCHMARK_OK 4999950000 178756945\n",
+          "stderr": "",
+          "elapsed_ms": 606,
+          "stdout_truncated": false,
+          "stderr_truncated": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "WASMDROID_BENCHMARK_OK 4999950000 63192246\n",
+          "stderr": "",
+          "elapsed_ms": 242,
+          "stdout_truncated": false,
+          "stderr_truncated": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "WASMDROID_BENCHMARK_OK 4999950000 178752257\n",
+          "stderr": "",
+          "elapsed_ms": 606,
+          "stdout_truncated": false,
+          "stderr_truncated": false
+        }
+      ],
+      "process_rss_bytes": 484073472,
+      "process_peak_rss_bytes": 601276416
+    }
+  },
+  "singlepass": {
+    "core": {
+      "schema_version": 1,
+      "backend": "singlepass",
+      "iterations_per_sample": 1000000,
+      "cold_compile_us": 3347,
+      "instantiate_us": 107,
+      "execution_us": [
+        4128,
+        4113,
+        4101,
+        4111,
+        3960
+      ],
+      "checksum": 507449365,
+      "process_rss_bytes": 129081344,
+      "process_peak_rss_bytes": 129736704
+    }
+  },
+  "singlepass_prior_trial": {
+    "core": {
+      "schema_version": 1,
+      "backend": "singlepass",
+      "iterations_per_sample": 1000000,
+      "cold_compile_us": 2800,
+      "instantiate_us": 88,
+      "execution_us": [
+        7796,
+        7804,
+        7760,
+        7769,
+        7792
+      ],
+      "checksum": 507449365,
+      "process_rss_bytes": 129859584,
+      "process_peak_rss_bytes": 129859584
+    }
+  },
+  "artifacts": [
+    {
+      "revision": "4b0c9fd40ee39b40761e7453caf8d2b8841f4791",
+      "backend": "cranelift",
+      "abi": "arm64-v8a",
+      "android_variant": "debug",
+      "rust_profile": "release",
+      "clean_build": true,
+      "artifact": "app-debug.apk",
+      "bytes": 57629631,
+      "sha256": "e2608ba509e5cc8b8c721dd983592d1879361a2bca732cc613b09cf5de07d1ec",
+      "zip_payload_bytes": 57572156,
+      "libraries": [
+        {
+          "path": "lib/arm64-v8a/libandroidx.graphics.path.so",
+          "bytes": 10096,
+          "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6"
+        },
+        {
+          "path": "lib/arm64-v8a/libjnidispatch.so",
+          "bytes": 165992,
+          "sha256": "ddfc6c965bbe366615c000ec1f06552ddf0bb2b4f9d921d0bff8c75b3cb2ca4c"
+        },
+        {
+          "path": "lib/arm64-v8a/libwasmdroid_ffi.so",
+          "bytes": 31177152,
+          "sha256": "90a4c6a914b2e85a1ae0d4eace84d8ca479a05976d2b8bbe9c7b13ba41e4edc7"
+        }
+      ]
+    },
+    {
+      "revision": "4b0c9fd40ee39b40761e7453caf8d2b8841f4791",
+      "backend": "cranelift",
+      "abi": "arm64-v8a",
+      "android_variant": "release",
+      "rust_profile": "release",
+      "clean_build": true,
+      "artifact": "app-release-unsigned.apk",
+      "bytes": 52510168,
+      "sha256": "e6e75ec89c9ca298ecc3fcc0e6259495a08b04dbd09d2a5e6fb762716b686ac7",
+      "zip_payload_bytes": 52470107,
+      "libraries": [
+        {
+          "path": "lib/arm64-v8a/libandroidx.graphics.path.so",
+          "bytes": 10096,
+          "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6"
+        },
+        {
+          "path": "lib/arm64-v8a/libjnidispatch.so",
+          "bytes": 165992,
+          "sha256": "ddfc6c965bbe366615c000ec1f06552ddf0bb2b4f9d921d0bff8c75b3cb2ca4c"
+        },
+        {
+          "path": "lib/arm64-v8a/libwasmdroid_ffi.so",
+          "bytes": 31177152,
+          "sha256": "90a4c6a914b2e85a1ae0d4eace84d8ca479a05976d2b8bbe9c7b13ba41e4edc7"
+        }
+      ]
+    },
+    {
+      "revision": "4b0c9fd40ee39b40761e7453caf8d2b8841f4791",
+      "backend": "cranelift",
+      "abi": "arm64-v8a",
+      "android_variant": "release",
+      "rust_profile": "release",
+      "clean_build": true,
+      "artifact": "app-release.aab",
+      "bytes": 33439184,
+      "sha256": "a3f752c39bfe10382610edc2a08f89f2b80a014ce3d17082c92aee5b48e77fe8",
+      "zip_payload_bytes": 33412720,
+      "libraries": [
+        {
+          "path": "base/lib/arm64-v8a/libandroidx.graphics.path.so",
+          "bytes": 10096,
+          "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6"
+        },
+        {
+          "path": "base/lib/arm64-v8a/libjnidispatch.so",
+          "bytes": 165992,
+          "sha256": "ddfc6c965bbe366615c000ec1f06552ddf0bb2b4f9d921d0bff8c75b3cb2ca4c"
+        },
+        {
+          "path": "base/lib/arm64-v8a/libwasmdroid_ffi.so",
+          "bytes": 31177152,
+          "sha256": "90a4c6a914b2e85a1ae0d4eace84d8ca479a05976d2b8bbe9c7b13ba41e4edc7"
+        }
+      ]
+    },
+    {
+      "revision": "4b0c9fd40ee39b40761e7453caf8d2b8841f4791",
+      "backend": "singlepass",
+      "abi": "arm64-v8a",
+      "android_variant": "debug",
+      "rust_profile": "release",
+      "clean_build": true,
+      "apk_bytes": 53792575,
+      "apk_sha256": "34d48b4f225f3706faf3ff2cfbbe6089be6d3e509b565b7a8b9ed13f119cdfdf",
+      "zip_payload_bytes": 53735100,
+      "libraries": [
+        {
+          "path": "lib/arm64-v8a/libandroidx.graphics.path.so",
+          "bytes": 10096,
+          "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6"
+        },
+        {
+          "path": "lib/arm64-v8a/libjnidispatch.so",
+          "bytes": 165992,
+          "sha256": "ddfc6c965bbe366615c000ec1f06552ddf0bb2b4f9d921d0bff8c75b3cb2ca4c"
+        },
+        {
+          "path": "lib/arm64-v8a/libwasmdroid_ffi.so",
+          "bytes": 27340096,
+          "sha256": "db80bcce8a822bb1dcfd0e4627616177a9a997130f53e6ba56007fd29c6fc220"
+        }
+      ]
+    }
+  ]
+}
