@@ -2,7 +2,9 @@ param(
     [Parameter(Mandatory = $true)][ValidatePattern('^[a-zA-Z0-9_.:-]+$')][string]$Serial,
     [string]$Abis = 'x86_64',
     [ValidateSet('true', 'false')][string]$RuntimeEnabled = 'true',
+    [ValidateSet('debug', 'release')][string]$RustProfile = 'debug',
     [ValidateRange(30, 600)][int]$TimeoutSeconds = 180,
+    [ValidatePattern('^[a-zA-Z0-9_.$,]+$')][string]$TestClass = 'dev.wasmdroid.app.EngineBridgeTest',
     [switch]$SkipBuild
 )
 $ErrorActionPreference = 'Stop'
@@ -12,7 +14,7 @@ $adb = Join-Path $sdk 'platform-tools\adb.exe'
 Push-Location $repo
 try {
     if (-not $SkipBuild) {
-        & ./android/gradlew.bat -p android :app:assembleDebug :app:assembleDebugAndroidTest "-PwasmdroidAbis=$Abis" "-PwasmdroidRuntime=$RuntimeEnabled"
+        & ./android/gradlew.bat -p android :app:assembleDebug :app:assembleDebugAndroidTest "-PwasmdroidAbis=$Abis" "-PwasmdroidRuntime=$RuntimeEnabled" "-PwasmdroidRustProfile=$RustProfile"
         if ($LASTEXITCODE -ne 0) { throw 'Android build failed' }
     }
     & $adb -s $Serial get-state
@@ -27,7 +29,7 @@ try {
     $stdout = Join-Path $results "$safeSerial.stdout.txt"
     $stderr = Join-Path $results "$safeSerial.stderr.txt"
     # Direct serial-targeted instrumentation avoids Gradle probing unrelated devices.
-    $runner = Start-Process -FilePath $adb -ArgumentList @('-s', $Serial, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'timeout_msec', '60000', 'dev.wasmdroid.app.test/androidx.test.runner.AndroidJUnitRunner') -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    $runner = Start-Process -FilePath $adb -ArgumentList @('-s', $Serial, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class', $TestClass, '-e', 'timeout_msec', ($TimeoutSeconds * 1000).ToString(), 'dev.wasmdroid.app.test/androidx.test.runner.AndroidJUnitRunner') -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     # Retain the process handle so Windows PowerShell can retrieve ExitCode after exit.
     $null = $runner.Handle
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)

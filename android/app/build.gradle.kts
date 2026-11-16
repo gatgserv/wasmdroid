@@ -6,6 +6,7 @@ plugins {
 
 val nativeAbis = providers.gradleProperty("wasmdroidAbis").orElse("arm64-v8a")
 val runtimeEnabled = providers.gradleProperty("wasmdroidRuntime").orElse("false")
+val rustProfile = providers.gradleProperty("wasmdroidRustProfile").orElse("debug")
 val prepareEngine by tasks.registering(Exec::class) {
     workingDir(rootProject.projectDir.parentFile)
     // Explicit task inputs: the generated Kotlin and native library must match.
@@ -16,10 +17,11 @@ val prepareEngine by tasks.registering(Exec::class) {
     inputs.file("../../rust-toolchain.toml")
     inputs.property("abis", nativeAbis)
     inputs.property("runtime", runtimeEnabled)
+    inputs.property("rustProfile", rustProfile)
     outputs.dir(layout.buildDirectory.dir("generated/uniffi"))
     outputs.dir(layout.buildDirectory.dir("generated/jniLibs"))
     commandLine("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-        "tools/build-native.ps1", "-Abis", nativeAbis.get(), "-RuntimeEnabled", runtimeEnabled.get())
+        "tools/build-native.ps1", "-Abis", nativeAbis.get(), "-RuntimeEnabled", runtimeEnabled.get(), "-RustProfile", rustProfile.get())
 }
 
 android {

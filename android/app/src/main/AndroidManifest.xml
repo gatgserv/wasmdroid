@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- The finite built-in probe needs no network, storage or background permissions. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Registry uses HTTPS; guest network access is controlled separately by the driver. -->
     <application android:label="WasmDroid" android:allowBackup="false" android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity android:name=".MainActivity" android:exported="true">

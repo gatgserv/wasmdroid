@@ -30,7 +30,7 @@ impl ArtifactReference {
             || path.is_empty()
             || !value
                 .bytes()
-                .all(|c| c.is_ascii_alphanumeric() || b"./_@:-".contains(&c))
+                .all(|c| c.is_ascii_alphanumeric() || b"./_@:+-".contains(&c))
             || path
                 .split('/')
                 .any(|part| part.is_empty() || part == "." || part == "..")

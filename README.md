@@ -9,8 +9,11 @@ The product plan is [plan-aplicatie-wasmer-mobil.md](plan-aplicatie-wasmer-mobil
 Stage 0 is in progress. This checkout contains the engine contracts, catalog
 validation, a verified SHA-256 content store, an initial SQLite migration, and an
 Android laboratory screen with a generated native bridge and an optional WASI probe.
-It is not yet a package manager. Registry installation, background execution,
-WebC execution, HTTP and Python acceptance remain pending. The curated catalog is
+The engine now searches/resolves the public registry, verifies WebC v3 downloads
+and transitive dependency graphs, and publishes installed metadata atomically.
+An explicit native harness executes the real Python package offline on Android;
+it is not yet an arbitrary-command user runner or a full package-manager UI.
+Background execution, HTTP and complete Stage 0 acceptance remain pending. The curated catalog is
 empty until packages have Android evidence. No Play compatibility claim is made.
 
 ## Layout
@@ -82,6 +85,28 @@ WasmDroid and its test APK; it preserves app data and does not reset devices.
 They do not satisfy the registry/Python/HTTP Stage 0 acceptance criterion.
 The Windows build script is the first supported Android build host; a portable
 Linux/macOS packaging script remains backlog work.
+
+The live registry/Python suite is separate and explicitly selected. A connected
+arm64 phone uses `-Abis arm64-v8a`; an emulator uses `x86_64`:
+
+```powershell
+.\tools\test-android.ps1 -Serial <device-serial> -Abis arm64-v8a -RustProfile release -TestClass dev.wasmdroid.app.RegistryProbeTest -TimeoutSeconds 600
+```
+
+`-RustProfile release` includes optimized Rust inside a debug-signed Android APK.
+For packaging directly through Gradle, use `-PwasmdroidRustProfile=release`.
+Keep Android debug/release signing separate from the Rust compilation profile
+when reporting measurements. The default hermetic suite selects only `EngineBridgeTest`.
+
+For a host-side registry check without a native Windows Wasmer backend:
+
+```sh
+cargo run --locked -p wasmdroid-engine --example registry -- search python
+cargo run --locked -p wasmdroid-engine --example registry -- pull wasmer.io/python/python .local/registry-spike
+```
+
+Product screens are specified in [docs/design/ui-flow.md](docs/design/ui-flow.md)
+and sketched before their Compose implementation.
 
 ## License
 

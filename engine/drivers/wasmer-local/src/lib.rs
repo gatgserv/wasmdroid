@@ -1,5 +1,6 @@
 //! Stage 0 finite WASI probe; intentionally not a lifecycle driver yet.
 //! Host filesystem and host networking are not enabled.
+pub mod webc_execution;
 use std::{io::Read, sync::Arc};
 use wasmer::{Module, Store};
 use wasmer_types::ModuleHash;

@@ -18,6 +18,9 @@ Preserve original notices and satisfy each dependency's license terms.
 | url | MIT OR Apache-2.0 | Catalog URL validation |
 | thiserror / anyhow | MIT OR Apache-2.0 | Error handling |
 | Tokio | MIT | Runtime probe executor |
+| reqwest | MIT OR Apache-2.0 | Public registry HTTPS client |
+| rustls / webpki-roots / ring | Multiple permissive licenses; see each upstream notice | TLS implementation and public trust roots |
+| semver | MIT OR Apache-2.0 | Public package dependency constraints |
 | AndroidX / Jetpack Compose | Apache-2.0 | Native Android UI |
 | kotlinx.coroutines | Apache-2.0 | Main-thread-safe native calls |
 | JNA | LGPL-2.1-or-later OR Apache-2.0 | UniFFI native loading; use Apache-2.0 option |

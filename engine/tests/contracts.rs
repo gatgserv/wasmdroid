@@ -37,6 +37,7 @@ fn references_require_registry_and_cannot_escape_paths() {
         assert!(serde_json::from_value::<ArtifactReference>(invalid.into()).is_err());
     }
     assert!(ArtifactReference::parse("docker.io/library/nginx:1.27").is_ok());
+    assert!(ArtifactReference::parse("wasmer.io/baran/python@3.12.9+build.9").is_ok());
 }
 
 #[test]

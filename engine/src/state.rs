@@ -2,7 +2,7 @@ use crate::{
     EngineError, Result,
     api::{Artifact, validate_name},
 };
-use rusqlite::{Connection, params};
+use rusqlite::{Connection, OptionalExtension, params};
 use std::path::Path;
 
 pub struct StateDb {
@@ -26,12 +26,41 @@ impl StateDb {
         Ok(Self { connection })
     }
     pub fn put_artifact(&self, artifact: &Artifact) -> Result<()> {
-        crate::api::ArtifactReference::parse(artifact.reference.as_str())?;
-        validate_name(&artifact.driver)?;
-        self.connection.execute(
+        self.put_artifacts(std::slice::from_ref(artifact))
+    }
+
+    /// Publish an entire verified dependency graph atomically.
+    pub fn put_artifacts(&self, artifacts: &[Artifact]) -> Result<()> {
+        let transaction = self.connection.unchecked_transaction()?;
+        for artifact in artifacts {
+            crate::api::ArtifactReference::parse(artifact.reference.as_str())?;
+            validate_name(&artifact.driver)?;
+            let existing: Option<String> = transaction
+                .query_row(
+                    "SELECT digest FROM artifacts WHERE reference=?1",
+                    [artifact.reference.as_str()],
+                    |row| row.get(0),
+                )
+                .optional()?;
+            if existing
+                .as_ref()
+                .is_some_and(|digest| digest != artifact.digest.as_str())
+            {
+                return Err(EngineError::Conflict(
+                    "an installed immutable version has a different digest".into(),
+                ));
+            }
+            let kind = match artifact.kind {
+                crate::api::ArtifactKind::Webc => "webc",
+                crate::api::ArtifactKind::Wasm => "wasm",
+                crate::api::ArtifactKind::OciImage => "oci_image",
+            };
+            transaction.execute(
             "INSERT INTO artifacts(reference, digest, kind, driver, metadata_json) VALUES (?1,?2,?3,?4,?5)
              ON CONFLICT(reference) DO UPDATE SET digest=excluded.digest,kind=excluded.kind,driver=excluded.driver,metadata_json=excluded.metadata_json",
-            params![artifact.reference.as_str(), artifact.digest.as_str(), serde_json::to_string(&artifact.kind)?, artifact.driver, serde_json::to_string(artifact)?])?;
+            params![artifact.reference.as_str(), artifact.digest.as_str(), kind, artifact.driver, serde_json::to_string(artifact)?])?;
+        }
+        transaction.commit()?;
         Ok(())
     }
     pub fn artifacts(&self) -> Result<Vec<Artifact>> {

@@ -62,6 +62,37 @@ impl ContentStore {
         self.blobs.join(digest.hex())
     }
 
+    /// Verify a cached blob without allocating its full contents in memory.
+    pub fn verify(&self, digest: &Digest, max_bytes: u64) -> Result<u64> {
+        let mut file = File::open(self.path(digest))?;
+        let mut hasher = Sha256::new();
+        let mut buffer = [0u8; 64 * 1024];
+        let mut total = 0u64;
+        loop {
+            let read = file.read(&mut buffer)?;
+            if read == 0 {
+                break;
+            }
+            total = total
+                .checked_add(read as u64)
+                .ok_or_else(|| EngineError::Invalid("blob too large".into()))?;
+            if total > max_bytes {
+                return Err(EngineError::Invalid(
+                    "cached blob exceeds size limit".into(),
+                ));
+            }
+            hasher.update(&buffer[..read]);
+        }
+        let actual = format!("sha256:{}", hex::encode(hasher.finalize()));
+        if actual != digest.as_str() {
+            return Err(EngineError::DigestMismatch {
+                expected: digest.as_str().into(),
+                actual,
+            });
+        }
+        Ok(total)
+    }
+
     /// Streams into a temporary file on the same filesystem. Failed verification
     /// never exposes a blob. max_bytes bounds untrusted downloads independently of Content-Length.
     pub fn ingest(&self, mut reader: impl Read, expected: &Digest, max_bytes: u64) -> Result<u64> {
