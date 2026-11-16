@@ -4,7 +4,10 @@ The owner selected Apache-2.0 and the public repository `gatgserv/wasmdroid`.
 `origin` is configured. The repository was verified empty (no branches, issues,
 PRs or CI runs). GitHub CLI authentication as `gatgserv` and repository write
 permissions are now verified in the executing context.
-No public code/PR has been submitted. See `implementation-status.md` for the full scope.
+The baseline is on `main` through the explicitly approved initialization; new work
+is in [PR #2](https://github.com/gatgserv/wasmdroid/pull/2). The remaining Stage 0
+acceptance is tracked by [issue #1](https://github.com/gatgserv/wasmdroid/issues/1).
+See `implementation-status.md` for the full scope.
 
 ## S0-1 — Engine foundation and native bridge (complete)
 
@@ -37,6 +40,7 @@ timed out; deterministic draining fixed it and the unchanged guest checks passed
 A physical Android 15/API 35 arm64 phone passed the live Python suite using the
 optimized Rust runtime (55.882 seconds for the whole test, including registry
 work) and all three bridge regressions. HTTP acceptance is still pending.
+Evidence: [registry/Python verification](verification/2026-11-16-registry-python.md).
 
 Compare supported compiler backends and measure release APK bytes, first-start
 compile milliseconds, warm-start milliseconds and peak memory bytes. Measurements
