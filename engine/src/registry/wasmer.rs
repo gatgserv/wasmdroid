@@ -1,61 +1,44 @@
 use super::{PackageRequirement, Registry, RegistryPackage, ResolvedArtifact, SearchPage};
+use crate::operation::OperationControl;
 use crate::{
     EngineError, Result,
     api::{Artifact, ArtifactKind, ArtifactReference},
     store::Digest,
 };
-use reqwest::blocking::Client;
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
-use std::{collections::BTreeMap, io::Read, time::Duration};
+use std::sync::Arc;
+use std::{collections::BTreeMap, io::Read};
 
 pub const REGISTRY_ENDPOINT: &str = "https://registry.wasmer.io/graphql";
 const MAX_METADATA_BYTES: u64 = 4 * 1024 * 1024;
 const RESOLVE_QUERY: &str = include_str!("../../graphql/resolve.graphql");
 const SEARCH_QUERY: &str = include_str!("../../graphql/search.graphql");
+const PACKAGE_NAMES_QUERY: &str = include_str!("../../graphql/search-package-names.graphql");
+const PACKAGE_NAMES_CURSOR: &str = "package-names:";
+const PUBLIC_VERSION_QUERY: &str = include_str!("../../graphql/public-version.graphql");
 
 pub struct WasmerRegistry {
-    client: Client,
+    http: super::http::Http,
 }
 
 impl WasmerRegistry {
     pub fn new() -> Result<Self> {
-        let client = Client::builder()
-            .https_only(true)
-            .user_agent(concat!("WasmDroid/", env!("CARGO_PKG_VERSION")))
-            .connect_timeout(Duration::from_secs(15))
-            .timeout(Duration::from_secs(180))
-            .redirect(reqwest::redirect::Policy::custom(|attempt| {
-                if attempt.previous().len() >= 5 {
-                    attempt.error("redirect limit exceeded")
-                } else if validate_download_url(attempt.url().as_str()).is_err() {
-                    attempt.error("unsafe redirect target")
-                } else {
-                    attempt.follow()
-                }
-            }))
-            .build()
-            .map_err(network_error)?;
-        Ok(Self { client })
+        Self::with_control(Arc::new(OperationControl::default()))
+    }
+    /// Share this token with the controlled Installer operation.
+    pub fn with_control(control: Arc<OperationControl>) -> Result<Self> {
+        Ok(Self {
+            http: super::http::Http::new(control)?,
+        })
     }
 
     fn query<T: DeserializeOwned>(&self, query: &str, variables: Value) -> Result<T> {
-        let response = self
-            .client
-            .post(REGISTRY_ENDPOINT)
-            .json(&json!({"query":query,"variables":variables}))
-            .send()
-            .and_then(reqwest::blocking::Response::error_for_status)
-            .map_err(network_error)?;
-        let mut bytes = Vec::new();
-        response
-            .take(MAX_METADATA_BYTES + 1)
-            .read_to_end(&mut bytes)?;
-        if bytes.len() as u64 > MAX_METADATA_BYTES {
-            return Err(EngineError::Registry(
-                "metadata response exceeds limit".into(),
-            ));
-        }
+        let bytes = self.http.post_json(
+            REGISTRY_ENDPOINT,
+            &json!({"query":query,"variables":variables}),
+            MAX_METADATA_BYTES,
+        )?;
         let envelope: Value = serde_json::from_slice(&bytes)?;
         if envelope
             .get("errors")
@@ -84,6 +67,43 @@ impl WasmerRegistry {
         }
         Ok(resolved)
     }
+
+    /// Fetch a public release directly when the text index omits an exact match.
+    pub fn find_public_version(
+        &self,
+        reference: &ArtifactReference,
+    ) -> Result<Option<RegistryPackage>> {
+        let (name, version) = split_reference(reference)?;
+        let version =
+            version.ok_or_else(|| EngineError::Invalid("exact release required".into()))?;
+        let data: Value =
+            self.query(PUBLIC_VERSION_QUERY, json!({"name":name,"version":version}))?;
+        let node = &data["getPackageVersion"];
+        if node["package"]["private"] != false || node.get("yankedAt") != Some(&Value::Null) {
+            return Ok(None);
+        }
+        let package = decode_registry_package(node)?;
+        Ok((package.reference == *reference).then_some(package))
+    }
+
+    fn search_page(
+        &self,
+        query: &str,
+        cursor: Option<&str>,
+        limit: u32,
+        package_names: bool,
+    ) -> Result<SearchPage> {
+        let (document, field) = if package_names {
+            (PACKAGE_NAMES_QUERY, "searchAutocomplete")
+        } else {
+            (SEARCH_QUERY, "search")
+        };
+        let data: Value = self.query(
+            document,
+            json!({"query":query,"after":cursor,"first":limit}),
+        )?;
+        decode_search_page(&data[field], package_names)
+    }
 }
 
 impl Registry for WasmerRegistry {
@@ -93,39 +113,23 @@ impl Registry for WasmerRegistry {
                 "search needs 1..256 characters and a limit of 1..50".into(),
             ));
         }
-        let data: Value = self.query(
-            SEARCH_QUERY,
-            json!({"query":query,"after":cursor,"first":limit}),
-        )?;
-        let edges = data["search"]["edges"]
-            .as_array()
-            .ok_or_else(|| EngineError::Registry("missing search edges".into()))?;
-        let mut packages = Vec::new();
-        for edge in edges {
-            let node = &edge["node"];
-            if node["__typename"] != "PackageVersion" || node["package"]["private"] != false {
-                continue;
-            }
-            let name = package_name(&node["package"])?;
-            packages.push(RegistryPackage {
-                reference: ArtifactReference::parse(format!(
-                    "wasmer.io/{name}@{}",
-                    text(node, "version")?
-                ))?,
-                publisher: text(&node["package"], "namespace")?.into(),
-                description: node["description"].as_str().unwrap_or("").into(),
-            });
+        if let Some(cursor) = cursor.and_then(|value| value.strip_prefix(PACKAGE_NAMES_CURSOR)) {
+            return self.search_page(query, Some(cursor), limit, true);
         }
-        let info = &data["search"]["pageInfo"];
-        let next_cursor = if info["hasNextPage"] == true {
-            info["endCursor"].as_str().map(str::to_owned)
-        } else {
-            None
-        };
-        Ok(SearchPage {
-            packages,
-            next_cursor,
-        })
+        let text = self.search_page(query, cursor, limit, false)?;
+        if cursor.is_none()
+            && text.packages.iter().all(is_legacy_webc)
+            && let Ok(names) = self.search_page(query, None, limit, true)
+            && (names
+                .packages
+                .iter()
+                .any(|package| !is_legacy_webc(package))
+                || (text.packages.is_empty()
+                    && (!names.packages.is_empty() || names.next_cursor.is_some())))
+        {
+            return Ok(names);
+        }
+        Ok(text)
     }
 
     fn resolve(&self, reference: &ArtifactReference) -> Result<ResolvedArtifact> {
@@ -178,28 +182,77 @@ impl Registry for WasmerRegistry {
 
     fn download(&self, artifact: &ResolvedArtifact) -> Result<Box<dyn Read + Send>> {
         validate_download_url(&artifact.download_url)?;
-        let response = self
-            .client
-            .get(&artifact.download_url)
-            .send()
-            .and_then(reqwest::blocking::Response::error_for_status)
-            .map_err(network_error)?;
-        // The client enforces HTTPS for redirects too; inspect the final URL as well.
-        validate_download_url(response.url().as_str())?;
-        if response
-            .content_length()
-            .is_some_and(|n| n != artifact.artifact.size_bytes)
-        {
-            return Err(EngineError::Registry(
-                "download size differs from registry metadata".into(),
-            ));
-        }
-        Ok(Box::new(response))
+        self.http
+            .download(&artifact.download_url, artifact.artifact.size_bytes)
     }
 }
 
-fn network_error(error: reqwest::Error) -> EngineError {
-    EngineError::Network(error.without_url().to_string())
+fn is_legacy_webc(package: &RegistryPackage) -> bool {
+    matches!(package.webc_version, Some(1 | 2))
+}
+
+fn decode_search_page(response: &Value, package_names: bool) -> Result<SearchPage> {
+    let edges = response["edges"]
+        .as_array()
+        .ok_or_else(|| EngineError::Registry("missing search edges".into()))?;
+    let mut packages = Vec::new();
+    for edge in edges {
+        let node = &edge["node"];
+        if node["__typename"] != "PackageVersion" || node["package"]["private"] != false {
+            continue;
+        }
+        if package_names
+            && (node.get("yankedAt") != Some(&Value::Null)
+                || !node["distribution"]["webcManifest"]
+                    .as_str()
+                    .and_then(|manifest| serde_json::from_str::<Value>(manifest).ok())
+                    .and_then(|manifest| {
+                        manifest["commands"]
+                            .as_object()
+                            .map(|commands| !commands.is_empty())
+                    })
+                    .unwrap_or(false))
+        {
+            continue;
+        }
+        packages.push(decode_registry_package(node)?);
+    }
+    let info = &response["pageInfo"];
+    let next_cursor = if info["hasNextPage"] == true {
+        info["endCursor"].as_str().map(|cursor| {
+            if package_names {
+                format!("{PACKAGE_NAMES_CURSOR}{cursor}")
+            } else {
+                cursor.to_owned()
+            }
+        })
+    } else {
+        None
+    };
+    Ok(SearchPage {
+        packages,
+        next_cursor,
+    })
+}
+
+fn decode_registry_package(node: &Value) -> Result<RegistryPackage> {
+    let package = &node["package"];
+    let name = package_name(package)?;
+    Ok(RegistryPackage {
+        reference: ArtifactReference::parse(format!(
+            "wasmer.io/{name}@{}",
+            text(node, "version")?
+        ))?,
+        publisher: text(package, "namespace")?.into(),
+        description: node["description"].as_str().unwrap_or("").into(),
+        webc_version: match node["distribution"]["webcVersion"].as_str() {
+            Some("V1") => Some(1),
+            Some("V2") => Some(2),
+            Some("V3") => Some(3),
+            _ => None,
+        },
+        released_at: node["createdAt"].as_str().map(str::to_owned),
+    })
 }
 
 fn split_reference(reference: &ArtifactReference) -> Result<(&str, Option<&str>)> {
@@ -299,12 +352,10 @@ fn decode_resolved(requested_name: &str, package: &Value) -> Result<ResolvedArti
         .filter(|n| *n > 0)
         .ok_or_else(|| EngineError::Registry("invalid WebC size".into()))?;
     let manifest: Value = serde_json::from_str(text(dist, "webcManifest")?)?;
-    let commands = manifest["commands"]
+    let manifest_commands = manifest["commands"]
         .as_object()
-        .ok_or_else(|| EngineError::Registry("package has no command manifest".into()))?
-        .keys()
-        .cloned()
-        .collect();
+        .ok_or_else(|| EngineError::Registry("package has no command manifest".into()))?;
+    let commands = manifest_commands.keys().cloned().collect();
     let mut dependencies = Vec::new();
     if let Some(uses) = manifest["use"].as_object() {
         for value in uses.values() {
@@ -330,6 +381,9 @@ fn decode_resolved(requested_name: &str, package: &Value) -> Result<ResolvedArti
     if let Some(entrypoint) = manifest["entrypoint"].as_str() {
         labels.insert("dev.wasmdroid.entrypoint".into(), entrypoint.into());
     }
+    if let Some(requirements) = declared_environment(manifest_commands) {
+        labels.insert("dev.wasmdroid.command-required-env".into(), requirements);
+    }
     Ok(ResolvedArtifact {
         artifact: Artifact {
             reference: ArtifactReference::parse(format!("wasmer.io/{requested_name}@{version}"))?,
@@ -346,9 +400,71 @@ fn decode_resolved(requested_name: &str, package: &Value) -> Result<ResolvedArti
     })
 }
 
+fn declared_environment(commands: &serde_json::Map<String, Value>) -> Option<String> {
+    let mut declared = BTreeMap::new();
+    for (command, metadata) in commands {
+        let Some(fields) = metadata["annotations"]["dev.wasmdroid.required-env"].as_array() else {
+            continue;
+        };
+        if command.len() > 128 || fields.is_empty() || fields.len() > 32 || declared.len() >= 32 {
+            continue;
+        }
+        let mut names = std::collections::BTreeSet::new();
+        let fields = fields.iter().map(|field| {
+            let name = field.get("name")?.as_str()?;
+            let mut bytes = name.bytes();
+            let first = bytes.next()?;
+            if name.len() > 128
+                || !(first.is_ascii_alphabetic() || first == b'_')
+                || !bytes.all(|c| c.is_ascii_alphanumeric() || c == b'_')
+                || !names.insert(name)
+            {
+                return None;
+            }
+            let kind = field.get("kind").map_or(Some("text"), Value::as_str)?;
+            matches!(kind, "text" | "secret" | "port")
+                .then(|| json!({ "name": name, "kind": kind }))
+        });
+        if let Some(fields) = fields.collect::<Option<Vec<_>>>() {
+            declared.insert(command, fields);
+        }
+    }
+    if declared.is_empty() {
+        return None;
+    }
+    let encoded = serde_json::to_string(&declared).ok()?;
+    (encoded.len() <= 128 * 1024).then_some(encoded)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn stores_only_explicit_valid_command_environment_requirements() {
+        let commands = json!({
+            "serve": {"annotations": {
+                "wasi": {"env": ["DEFAULT=provided"]},
+                "dev.wasmdroid.required-env": [
+                    {"name": "SERVICE_PORT", "kind": "port"},
+                    {"name": "TOKEN", "kind": "secret"},
+                    {"name": "NAME"}
+                ]
+            }},
+            "defaults_only": {"annotations": {"wasi": {"env": ["OTHER=one"]}}},
+            "bad": {"annotations": {"dev.wasmdroid.required-env": [{"name": "A=B"}]}}
+        });
+        let raw = declared_environment(commands.as_object().unwrap()).unwrap();
+        let settings: Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(
+            settings,
+            json!({"serve": [
+                {"name": "SERVICE_PORT", "kind": "port"},
+                {"name": "TOKEN", "kind": "secret"},
+                {"name": "NAME", "kind": "text"},
+            ]})
+        );
+    }
+
     fn fixture() -> Value {
         json!({"version":"1.2.3","license":"MIT","yankedAt":null,
             "package":{"namespace":"example","packageName":"site","private":false},
@@ -366,6 +482,69 @@ mod tests {
         assert_eq!(resolved.artifact.commands, vec!["serve"]);
         assert_eq!(resolved.dependencies[0].version_requirement, "^1.0");
         assert!(!format!("{resolved:?}").contains("temporary=fixture"));
+    }
+    #[test]
+    fn reads_the_release_creation_date_and_accepts_older_metadata() {
+        let mut node = fixture();
+        node["createdAt"] = "2025-08-20T01:02:03.123456Z".into();
+        node["updatedAt"] = "2025-09-10T00:00:00Z".into();
+        let release = decode_registry_package(&node).unwrap();
+        assert_eq!(
+            release.released_at.as_deref(),
+            Some("2025-08-20T01:02:03.123456Z")
+        );
+        let legacy = decode_registry_package(&fixture()).unwrap();
+        assert!(legacy.released_at.is_none());
+        let payload = serde_json::to_value(legacy).unwrap();
+        assert!(payload.get("released_at").is_none());
+        assert!(
+            serde_json::from_value::<RegistryPackage>(payload)
+                .unwrap()
+                .released_at
+                .is_none()
+        );
+    }
+    #[test]
+    fn reports_the_actual_webc_distribution_version_for_search_results() {
+        let mut node = fixture();
+        assert_eq!(
+            decode_registry_package(&node).unwrap().webc_version,
+            Some(3)
+        );
+        node["distribution"]["webcVersion"] = json!("V2");
+        assert_eq!(
+            decode_registry_package(&node).unwrap().webc_version,
+            Some(2)
+        );
+        node["distribution"] = Value::Null;
+        assert_eq!(decode_registry_package(&node).unwrap().webc_version, None);
+    }
+
+    #[test]
+    fn name_search_uses_manifest_commands_and_routes_its_own_cursor() {
+        let mut runnable = fixture();
+        runnable["__typename"] = json!("PackageVersion");
+        let mut library = runnable.clone();
+        library["distribution"]["webcManifest"] = json!("{\"commands\":{}}");
+        let mut yanked = runnable.clone();
+        yanked["yankedAt"] = json!("2026-01-01");
+        let decoded = decode_search_page(
+            &json!({
+                "edges": [{"node":library},{"node":runnable},{"node":yanked}],
+                "pageInfo": {"hasNextPage":true,"endCursor":"registry-cursor"}
+            }),
+            true,
+        )
+        .unwrap();
+        assert_eq!(decoded.packages.len(), 1);
+        assert_eq!(
+            decoded.packages[0].reference.as_str(),
+            "wasmer.io/example/site@1.2.3"
+        );
+        assert_eq!(
+            decoded.next_cursor.as_deref(),
+            Some("package-names:registry-cursor")
+        );
     }
     #[test]
     fn rejects_private_yanked_identity_mismatch_and_legacy_container() {

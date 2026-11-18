@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcuts_app_name">WasmDroid</string>
+    <string name="shortcuts_widget_description">Start, stop or open one chosen application.</string>
+    <string name="shortcuts_widget_configuration">Choose widget application</string>
+    <string name="shortcuts_tile_configuration">Choose Quick Settings application</string>
+    <string name="shortcuts_choose_application">Choose application</string>
+    <string name="shortcuts_change_application">Change application</string>
+    <string name="shortcuts_save_does_not_start">This selection controls only this shortcut. Saving does not start the application.</string>
+    <string name="shortcuts_no_applications">No applications on this page.</string>
+    <string name="shortcuts_start">Start</string>
+    <string name="shortcuts_stop">Stop</string>
+    <string name="shortcuts_open">Open</string>
+    <string name="shortcuts_stopped">Stopped</string>
+    <string name="shortcuts_starting">Starting</string>
+    <string name="shortcuts_running">Running</string>
+    <string name="shortcuts_partial">Some parts are stopped</string>
+    <string name="shortcuts_review_hint">For a partly running application, the tile opens WasmDroid to review its stopped parts. Long-press the tile to change its application.</string>
+    <string name="shortcuts_stopping">Stopping</string>
+    <string name="shortcuts_unavailable">Unavailable. Open WasmDroid to review the application.</string>
+    <string name="shortcuts_unlock_required">Unlock required</string>
+    <string name="shortcuts_selection_changed">The shortcut selection changed or is unavailable. Reload and choose the application again.</string>
+    <string name="shortcuts_action_expired">This action has expired. Use the shortcut again.</string>
+    <string name="shortcuts_action_unavailable">The action could not be admitted. No other application was selected. Open WasmDroid to review its current state.</string>
+    <string name="shortcuts_working">Checking the selected application…</string>
+    <string name="shortcuts_start_completed">The selected application finished its start request.</string>
+    <string name="shortcuts_stop_completed">The selected application is stopped. Its data is kept.</string>
+    <string name="shortcuts_opened">Opening the selected application.</string>
+    <string name="shortcuts_reload">Reload</string>
+    <string name="shortcuts_next">Next page</string>
+    <string name="shortcuts_save">Save</string>
+    <string name="shortcuts_cancel">Cancel</string>
+    <string name="shortcuts_close">Close</string>
+</resources>

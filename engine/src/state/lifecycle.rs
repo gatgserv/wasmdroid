@@ -49,7 +49,7 @@ fn state_name(state: InstanceState) -> &'static str {
         Dead => "dead",
     }
 }
-fn kind_name(kind: ArtifactKind) -> &'static str {
+pub(super) fn kind_name(kind: ArtifactKind) -> &'static str {
     match kind {
         ArtifactKind::Webc => "webc",
         ArtifactKind::Wasm => "wasm",
@@ -64,7 +64,7 @@ fn now_ms() -> Result<i64> {
         .try_into()
         .map_err(|_| EngineError::Invalid("system clock out of range".into()))
 }
-fn event(
+pub(super) fn event(
     connection: &Connection,
     id: Option<&str>,
     kind: &str,
@@ -76,6 +76,46 @@ fn event(
 }
 
 impl StateDb {
+    pub fn remove_artifact(&self, reference: &crate::api::ArtifactReference) -> Result<()> {
+        let transaction = self.connection.unchecked_transaction()?;
+        let artifact = self.artifact(reference)?;
+        let users: i64 = transaction.query_row(
+            "SELECT count(*) FROM instances WHERE artifact_ref=?1",
+            [reference.as_str()],
+            |row| row.get(0),
+        )?;
+        if users != 0 {
+            return Err(EngineError::Conflict(
+                "package is used by an instance".into(),
+            ));
+        }
+        for image in self.artifacts()? {
+            if image.reference == *reference {
+                continue;
+            }
+            if let Some(deps) = image.labels.get(crate::installer::DEPENDENCIES_LABEL) {
+                let dependencies: Vec<crate::api::ArtifactReference> = serde_json::from_str(deps)?;
+                if dependencies.contains(reference) {
+                    return Err(EngineError::Conflict(
+                        "package is required by another installed package".into(),
+                    ));
+                }
+            }
+        }
+        transaction.execute(
+            "DELETE FROM artifacts WHERE reference=?1",
+            [reference.as_str()],
+        )?;
+        event(
+            &transaction,
+            None,
+            kind_name(artifact.kind),
+            &artifact.driver,
+            serde_json::json!({"type":"image_removed","reference":reference}),
+        )?;
+        transaction.commit()?;
+        Ok(())
+    }
     pub fn artifact(&self, reference: &crate::api::ArtifactReference) -> Result<Artifact> {
         let json: Option<String> = self
             .connection
@@ -118,9 +158,26 @@ impl StateDb {
     }
 
     pub fn create_instance(&self, id: &str, spec: &InstanceSpec) -> Result<InstanceRecord> {
+        if spec.labels.contains_key(crate::stacks::STACK_LABEL)
+            || spec.labels.contains_key(crate::stacks::SERVICE_LABEL)
+        {
+            return Err(EngineError::Unsupported(
+                "reserved stack ownership labels".into(),
+            ));
+        }
+        let transaction = self.connection.unchecked_transaction()?;
+        self.insert_instance_row(&transaction, id, spec)?;
+        transaction.commit()?;
+        self.instance(id)
+    }
+    pub(super) fn insert_instance_row(
+        &self,
+        transaction: &Connection,
+        id: &str,
+        spec: &InstanceSpec,
+    ) -> Result<()> {
         validate_name(id)?;
         spec.validate()?;
-        let transaction = self.connection.unchecked_transaction()?;
         if transaction.query_row(
             "SELECT EXISTS(SELECT 1 FROM instances WHERE id=?1)",
             [id],
@@ -157,14 +214,14 @@ impl StateDb {
             }
         }
         event(
-            &transaction,
+            transaction,
             Some(id),
             kind_name(artifact.kind),
             &artifact.driver,
             serde_json::json!({"type":"instance_created","state":"created"}),
         )?;
-        transaction.commit()?;
-        self.instance(id)
+        self.allocate_browser_identity(transaction, id, self.connection.last_insert_rowid())?;
+        Ok(())
     }
 
     /// Updates state and event together. Call only after verified runtime outcome.
@@ -176,13 +233,70 @@ impl StateDb {
         exit_code: Option<i32>,
         error: Option<&str>,
     ) -> Result<InstanceRecord> {
+        self.transition_with_ports(id, expected_version, next, exit_code, error, (None, None))
+    }
+    pub fn start_instance(
+        &self,
+        id: &str,
+        expected_version: u64,
+        ports: &[crate::api::PortBinding],
+    ) -> Result<InstanceRecord> {
+        self.transition_with_ports(
+            id,
+            expected_version,
+            InstanceState::Running,
+            None,
+            None,
+            (Some(ports), None),
+        )
+    }
+    pub(super) fn transition_with_ports(
+        &self,
+        id: &str,
+        expected_version: u64,
+        next: InstanceState,
+        exit_code: Option<i32>,
+        error: Option<&str>,
+        runtime: (Option<&[crate::api::PortBinding]>, Option<&str>),
+    ) -> Result<InstanceRecord> {
+        let (ports, generation) = runtime;
         let transaction = self.connection.unchecked_transaction()?;
         let previous = self.instance(id)?;
+        let authority = self.guard_automation_transition(id, generation)?;
         if previous.version != expected_version {
             return Err(EngineError::Conflict("stale instance revision".into()));
         }
         previous.state.transition(next)?;
-        if (next == InstanceState::Exited && exit_code.is_none())
+        if let Some(ports) = ports {
+            self.validate_published_browser_origins(id, ports)?;
+            if ports.len() != previous.spec.ports.len()
+                || ports
+                    .iter()
+                    .zip(&previous.spec.ports)
+                    .any(|(actual, requested)| {
+                        actual.host_port == 0
+                            || actual.instance_port != requested.instance_port
+                            || actual.protocol != requested.protocol
+                            || (requested.host_port != 0 && requested.host_port != actual.host_port)
+                    })
+            {
+                return Err(EngineError::Invalid(
+                    "runtime port mappings disagree with specification".into(),
+                ));
+            }
+            transaction.execute("DELETE FROM port_bindings WHERE instance_id=?1", [id])?;
+            for port in ports {
+                let protocol = match port.protocol {
+                    crate::api::Protocol::Tcp => "tcp",
+                    crate::api::Protocol::Udp => "udp",
+                };
+                transaction.execute("INSERT INTO port_bindings(instance_id,endpoint_id,host_port,instance_port,protocol,kind,driver) VALUES (?1,?2,?3,?4,?5,?6,?7)",
+                    params![id,previous.spec.endpoint_id,port.host_port,port.instance_port,protocol,kind_name(previous.kind),previous.driver])?;
+            }
+        }
+        if (next == InstanceState::Exited
+            && exit_code.is_none()
+            && error.is_none_or(|value| value.trim().is_empty()))
             || (!matches!(next, InstanceState::Exited | InstanceState::Dead)
                 && (exit_code.is_some() || error.is_some()))
         {
@@ -197,6 +311,7 @@ impl StateDb {
         if changed != 1 {
             return Err(EngineError::Conflict("stale instance revision".into()));
         }
+        self.record_automation_transition(&transaction, authority, next, exit_code, error)?;
         if matches!(next, InstanceState::Exited | InstanceState::Dead) {
             transaction.execute("DELETE FROM port_bindings WHERE instance_id=?1", [id])?;
         }
@@ -207,12 +322,39 @@ impl StateDb {
             &previous.driver,
             serde_json::json!({"type":"instance_state_changed","from":previous.state,"to":next,"exit_code":exit_code}),
         )?;
+        let committed = self.instance(id)?;
         transaction.commit()?;
-        self.instance(id)
+        Ok(committed)
+    }
+
+    pub fn instance_ports(&self, id: &str) -> Result<Vec<crate::api::PortBinding>> {
+        self.instance(id)?;
+        let mut query=self.connection.prepare("SELECT host_port,instance_port,protocol FROM port_bindings WHERE instance_id=?1 ORDER BY instance_port")?;
+        let rows = query.query_map([id], |row| {
+            Ok((
+                row.get::<_, u16>(0)?,
+                row.get::<_, u16>(1)?,
+                row.get::<_, String>(2)?,
+            ))
+        })?;
+        rows.map(|row| {
+            let (host_port, instance_port, protocol) = row?;
+            Ok(crate::api::PortBinding {
+                host_port,
+                instance_port,
+                protocol: serde_json::from_value(protocol.into())?,
+            })
+        })
+        .collect()
     }
 
     pub fn remove_instance(&self, id: &str, expected_version: u64) -> Result<()> {
         let transaction = self.connection.unchecked_transaction()?;
+        if self.stack_for_instance(id)?.is_some() {
+            return Err(EngineError::Conflict(
+                "instance belongs to a stack; remove through the stack".into(),
+            ));
+        }
         let previous = self.instance(id)?;
         if previous.version != expected_version {
             return Err(EngineError::Conflict("stale instance revision".into()));
@@ -225,6 +367,7 @@ impl StateDb {
                 "stop the instance before removal".into(),
             ));
         }
+        self.clear_run_intent_for_edit(&transaction, id)?;
         transaction.execute("DELETE FROM instances WHERE id=?1", [id])?;
         event(
             &transaction,
@@ -235,6 +378,50 @@ impl StateDb {
         )?;
         transaction.commit()?;
         Ok(())
+    }
+    /// An explicitly requested retry creates a new identity/generation. Dead
+    /// stays terminal; stale callbacks for the old id cannot affect the retry.
+    pub fn retry_dead_instance(
+        &self,
+        id: &str,
+        expected_version: u64,
+        new_id: &str,
+    ) -> Result<InstanceRecord> {
+        validate_name(new_id)?;
+        let transaction = self.connection.unchecked_transaction()?;
+        if self.stack_for_instance(id)?.is_some() {
+            return Err(EngineError::Unsupported(
+                "managed stack retry requires its stack controller".into(),
+            ));
+        }
+        let old = self.instance(id)?;
+        if old.version != expected_version || old.state != InstanceState::Dead {
+            return Err(EngineError::Conflict(
+                "only the current dead instance can be replaced".into(),
+            ));
+        }
+        transaction.execute("INSERT INTO instances(id,endpoint_id,artifact_ref,kind,driver,spec_json,state) VALUES (?1,?2,?3,?4,?5,?6,'created')",
+            params![new_id,old.spec.endpoint_id,old.spec.artifact_ref.as_str(),kind_name(old.kind),old.driver,serde_json::to_string(&old.spec)?])?;
+        transaction.execute("INSERT INTO instance_volumes(instance_id,volume_name,target,read_only) SELECT ?1,volume_name,target,read_only FROM instance_volumes WHERE instance_id=?2",params![new_id,id])?;
+        self.copy_run_authority(&transaction, id, new_id)?;
+        self.move_browser_identity(&transaction, id, new_id)?;
+        transaction.execute("DELETE FROM instances WHERE id=?1", [id])?;
+        event(
+            &transaction,
+            Some(id),
+            kind_name(old.kind),
+            &old.driver,
+            serde_json::json!({"type":"instance_replaced","replacement":new_id}),
+        )?;
+        event(
+            &transaction,
+            Some(new_id),
+            kind_name(old.kind),
+            &old.driver,
+            serde_json::json!({"type":"instance_created","state":"created","replaces":id}),
+        )?;
+        transaction.commit()?;
+        self.instance(new_id)
     }
 
     pub fn events_after(&self, sequence: u64, limit: u32) -> Result<Vec<EngineEvent>> {
@@ -271,7 +458,7 @@ impl StateDb {
     pub(crate) fn reconcile_interrupted(&self) -> Result<usize> {
         let transaction = self.connection.unchecked_transaction()?;
         let mut query = transaction.prepare(
-            "SELECT id FROM instances WHERE state IN ('running','paused','restarting') ORDER BY id",
+            "SELECT id FROM instances WHERE state IN ('running','paused','restarting') OR EXISTS(SELECT 1 FROM instance_automation WHERE instance_id=instances.id AND outcome IN ('starting','running')) ORDER BY id",
         )?;
         let ids = query
             .query_map([], |row| row.get::<_, String>(0))?
@@ -287,6 +474,13 @@ impl StateDb {
             )?;
             transaction.execute("UPDATE instances SET state='dead',version=?2,exit_code=NULL,last_error='Engine session ended before a verified exit' WHERE id=?1",params![id,version])?;
             transaction.execute("DELETE FROM port_bindings WHERE instance_id=?1", [id])?;
+            self.record_automation_transition(
+                &transaction,
+                self.run_authority(id)?,
+                InstanceState::Dead,
+                None,
+                Some("Engine session ended before a verified exit"),
+            )?;
             event(
                 &transaction,
                 Some(id),
@@ -328,6 +522,90 @@ impl StateDb {
         Ok(query
             .query_map([name], |row| row.get::<_, String>(0))?
             .collect::<std::result::Result<Vec<_>, _>>()?)
+    }
+    /// Attach restored data only to an inactive instance, preserving the old
+    /// volume as an independent recovery copy. Spec, references and event agree.
+    pub fn replace_instance_volume(
+        &self,
+        id: &str,
+        expected_version: u64,
+        old_volume: &str,
+        new_volume: &str,
+    ) -> Result<InstanceRecord> {
+        validate_name(old_volume)?;
+        validate_name(new_volume)?;
+        if old_volume == new_volume {
+            return Err(EngineError::Invalid(
+                "restore requires a new data volume".into(),
+            ));
+        }
+        let transaction = self.connection.unchecked_transaction()?;
+        let previous = self.instance(id)?;
+        if previous.version != expected_version
+            || matches!(
+                previous.state,
+                InstanceState::Running | InstanceState::Paused | InstanceState::Restarting
+            )
+        {
+            return Err(EngineError::Conflict(
+                "stop the current instance before replacing its data".into(),
+            ));
+        }
+        self.volume(new_volume)?;
+        if self.volume_deletions()?.contains(&new_volume.to_owned()) {
+            return Err(EngineError::Conflict(
+                "restored volume removal is pending".into(),
+            ));
+        }
+        let mut spec = previous.spec.clone();
+        let mut changed = 0usize;
+        for mount in &mut spec.mounts {
+            if matches!(&mount.source,MountSource::Volume(name) if name==old_volume) {
+                mount.source = MountSource::Volume(new_volume.into());
+                changed += 1;
+            }
+        }
+        if changed == 0 {
+            return Err(EngineError::NotFound(
+                "selected instance data volume".into(),
+            ));
+        }
+        let version = sql_u64(
+            expected_version
+                .checked_add(1)
+                .ok_or_else(|| EngineError::Invalid("instance revision overflow".into()))?,
+        )?;
+        self.clear_run_intent_for_edit(&transaction, id)?;
+        let updated = transaction.execute(
+            "UPDATE instances SET spec_json=?1,version=?2 WHERE id=?3 AND version=?4",
+            params![
+                serde_json::to_string(&spec)?,
+                version,
+                id,
+                sql_u64(expected_version)?
+            ],
+        )?;
+        if updated != 1 {
+            return Err(EngineError::Conflict("stale instance revision".into()));
+        }
+        let references = transaction.execute(
+            "UPDATE instance_volumes SET volume_name=?1 WHERE instance_id=?2 AND volume_name=?3",
+            params![new_volume, id, old_volume],
+        )?;
+        if references != changed {
+            return Err(EngineError::Conflict(
+                "instance mount references do not match its specification".into(),
+            ));
+        }
+        event(
+            &transaction,
+            Some(id),
+            kind_name(previous.kind),
+            &previous.driver,
+            serde_json::json!({"type":"instance_data_replaced","old_volume":old_volume,"new_volume":new_volume}),
+        )?;
+        transaction.commit()?;
+        self.instance(id)
     }
     pub(crate) fn insert_volume(
         &self,
@@ -390,9 +668,9 @@ impl StateDb {
                 "missing volume removal intent".into(),
             ));
         }
-        if !self.volume_references(name)?.is_empty() {
+        if !self.volume_references(name)?.is_empty() || self.stack_references_volume(name)? {
             return Err(EngineError::Conflict(
-                "volume is referenced by an instance".into(),
+                "volume is referenced by an instance or stack".into(),
             ));
         }
         transaction.execute("DELETE FROM volumes WHERE name=?1", [name])?;
@@ -410,9 +688,9 @@ impl StateDb {
     pub(crate) fn begin_volume_removal(&self, name: &str) -> Result<()> {
         let transaction = self.connection.unchecked_transaction()?;
         self.volume(name)?;
-        if !self.volume_references(name)?.is_empty() {
+        if !self.volume_references(name)?.is_empty() || self.stack_references_volume(name)? {
             return Err(EngineError::Conflict(
-                "volume is referenced by an instance".into(),
+                "volume is referenced by an instance or stack".into(),
             ));
         }
         transaction.execute(

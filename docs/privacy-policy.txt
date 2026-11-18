@@ -1,0 +1,23 @@
+WasmDroid privacy policy
+
+WasmDroid is published by ATG Services SRL. The app lets you install and run WebAssembly packages on your Android device. You can use WasmDroid without creating an account.
+
+On-device information
+
+WasmDroid stores downloaded packages, application settings, files in mounted volumes, service output, and embedded browser data on your device. It uses this information to run and manage the applications you configure. Embedded browser data is kept in separate profiles where the Android WebView supports them.
+
+Network activity
+
+When you search the Store or install a package, WasmDroid contacts the Wasmer Registry and the package download hosts. These services receive the search or download request and network information needed to respond, such as the connection's IP address. A package with Internet or local-network access can send requests and data to the destinations it uses. When an application is shared over Wi-Fi, devices that can reach the displayed address can interact with that application while sharing is active.
+
+Files and diagnostic reports
+
+WasmDroid accesses files you select for importing or restoring. Exports and backups are written to the destination you select. Diagnostic reports are prepared locally for review. If you choose to share or submit a report, the destination you select receives its contents.
+
+Retention and control
+
+Use the app's storage and data controls to remove downloads, saved volumes, or embedded browser data. Android's app storage settings let you clear WasmDroid's private data. Files saved outside the app and information already sent to other services are managed at their destinations.
+
+Contact
+
+For questions about this policy or privacy requests, contact ATG Services SRL using the developer contact details on WasmDroid's Google Play listing.

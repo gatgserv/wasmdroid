@@ -1,43 +1,33 @@
 //! Per-instance inbound-only virtual network. No host network implementation is
-//! reachable. Bound sockets also deny connect(), which would otherwise bypass
-//! VirtualNetworking::connect_tcp and use upstream's first-listener fallback.
-use std::{
-    net::SocketAddr,
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-    },
-};
+//! reachable. Bound sockets also deny connect(), so only the explicitly
+//! reserved host forwarder can reach the probe's guest listener.
+use crate::{http_execution::ForwardTarget, service_network::ServiceNetwork};
+use std::net::SocketAddr;
 use wasmer_wasix::virtual_net::{
-    self, LoopbackNetworking, NetworkError, VirtualNetworking, VirtualTcpBoundSocket,
-    VirtualTcpListener, VirtualTcpSocket,
+    self, NetworkError, VirtualNetworking, VirtualTcpBoundSocket, VirtualTcpListener,
+    VirtualTcpSocket,
 };
 
 #[derive(Debug, Clone)]
 pub(crate) struct InboundNetwork {
-    inner: LoopbackNetworking,
+    inner: ServiceNetwork,
     target: SocketAddr,
-    listening: Arc<AtomicBool>,
 }
 
 impl InboundNetwork {
     pub fn new(port: u16) -> Self {
         Self {
-            inner: LoopbackNetworking::new(),
+            inner: ServiceNetwork::new(true),
             target: ([127, 0, 0, 1], port).into(),
-            listening: Arc::new(AtomicBool::new(false)),
         }
     }
 
     pub fn connect_forwarder(&self) -> Option<Box<dyn VirtualTcpSocket + Sync>> {
-        if !self.listening.load(Ordering::Acquire) {
-            return None;
-        }
-        // Only this exact target may ever listen in this network. Never pass a
-        // caller-supplied address to loopback_connect_to (upstream has fallback).
-        self.inner
-            .loopback_connect_to(([127, 0, 0, 1], 49152).into(), self.target)
-            .map(|socket| Box::new(socket) as Box<dyn VirtualTcpSocket + Sync>)
+        self.inner.ingress(self.target.port()).connect_forwarder()
+    }
+
+    pub fn close(&self) {
+        self.inner.close();
     }
 }
 
@@ -69,7 +59,6 @@ impl VirtualNetworking for InboundNetwork {
                 .inner
                 .bind_tcp(addr, v6, reuse_port, reuse_addr)
                 .await?,
-            listening: self.listening.clone(),
         }))
     }
 }
@@ -77,16 +66,13 @@ impl VirtualNetworking for InboundNetwork {
 #[derive(Debug)]
 struct InboundBound {
     inner: Box<dyn VirtualTcpBoundSocket + Sync>,
-    listening: Arc<AtomicBool>,
 }
 impl VirtualTcpBoundSocket for InboundBound {
     fn addr_local(&self) -> virtual_net::Result<SocketAddr> {
         self.inner.addr_local()
     }
     fn listen(&mut self) -> virtual_net::Result<Box<dyn VirtualTcpListener + Sync>> {
-        let listener = self.inner.listen()?;
-        self.listening.store(true, Ordering::Release);
-        Ok(listener)
+        self.inner.listen()
     }
     fn connect(&mut self, _: SocketAddr) -> virtual_net::Result<Box<dyn VirtualTcpSocket + Sync>> {
         Err(NetworkError::PermissionDenied)
@@ -136,5 +122,45 @@ mod tests {
             assert!(first.connect_forwarder().is_some());
             assert!(second.connect_forwarder().is_none());
         });
+    }
+
+    #[tokio::test]
+    async fn closing_one_probe_revokes_its_sockets_and_preserves_the_other_probe() {
+        let first = InboundNetwork::new(8080);
+        let second = InboundNetwork::new(8080);
+        let mut first_listener = first
+            .listen_tcp(first.target, false, false, false)
+            .await
+            .unwrap();
+        let mut second_listener = second
+            .listen_tcp(second.target, false, false, false)
+            .await
+            .unwrap();
+        let mut first_client = first.connect_forwarder().unwrap();
+        let (mut first_peer, _) = first_listener.try_accept().unwrap();
+        let mut second_client = second.connect_forwarder().unwrap();
+        let (mut second_peer, _) = second_listener.try_accept().unwrap();
+
+        first.close();
+
+        assert!(first.connect_forwarder().is_none());
+        assert!(matches!(
+            first_listener.try_accept(),
+            Err(NetworkError::ConnectionAborted)
+        ));
+        assert_eq!(
+            first_client.try_send(b"closed"),
+            Err(NetworkError::NotConnected)
+        );
+        assert_eq!(
+            first_peer.try_send(b"closed"),
+            Err(NetworkError::NotConnected)
+        );
+        assert_eq!(second_client.try_send(b"open").unwrap(), 4);
+        let mut buffer = [std::mem::MaybeUninit::<u8>::uninit(); 4];
+        assert_eq!(
+            second_peer.try_recv(&mut buffer, false).unwrap(),
+            buffer.len()
+        );
     }
 }

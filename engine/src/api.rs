@@ -203,10 +203,18 @@ pub struct InstanceSpec {
     pub network: NetworkMode,
     #[serde(default)]
     pub internet_access: bool,
+    /// Explicit guest outbound LAN permission, independent of Internet access,
+    /// private-stack networking and transient inbound sharing. Default off.
+    /// Omission when false preserves legacy serialized/signature bytes.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub lan_access: bool,
     #[serde(default)]
     pub resources: ResourceLimits,
     #[serde(default)]
     pub restart_policy: RestartPolicy,
+    /// Explicit boot opt-in. Restart policy alone never grants a boot launch.
+    #[serde(default)]
+    pub start_on_boot: bool,
     #[serde(default)]
     pub labels: BTreeMap<String, String>,
     #[serde(default)]
@@ -217,6 +225,9 @@ pub struct InstanceSpec {
 
 fn local_endpoint() -> String {
     "local".into()
+}
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 impl InstanceSpec {

@@ -209,7 +209,8 @@ fn catalog_rejects_duplicates_unknown_versions_and_external_web_launches() {
     duplicate["packages"].as_array_mut().unwrap().push(item);
     assert!(Catalog::parse(&duplicate.to_string()).is_err());
     let mut unknown = catalog();
-    unknown["schema_version"] = 2.into();
+    // Schemas1/2/3 are supported;4 remains an unknown feature contract.
+    unknown["schema_version"] = 4.into();
     assert!(Catalog::parse(&unknown.to_string()).is_err());
     for path in [
         "//evil.example",

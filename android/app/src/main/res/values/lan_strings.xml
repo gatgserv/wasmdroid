@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lan_share">Share on Wi-Fi</string>
+    <string name="lan_addresses">Wi-Fi addresses</string>
+    <string name="lan_no_published_ports">No ports published</string>
+    <string name="lan_intro">Open this application from your laptop or another device.</string>
+    <string name="lan_android_permission">Android local network access is required to share over Wi-Fi.</string>
+    <string name="lan_exposure">Anyone who can reach this Wi-Fi address can use this application. The link uses HTTP. Use a trusted network.</string>
+    <string name="lan_lifetime">Sharing stops when the application stops or the Wi-Fi connection changes. It stays off after a restart.</string>
+    <string name="lan_lifetime_default">This application starts sharing on an eligible Wi-Fi network. After you stop sharing or the connection changes, start sharing again here or restart the application.</string>
+    <string name="lan_off">Sharing is off</string>
+    <string name="lan_starting">Starting sharing…</string>
+    <string name="lan_active">Sharing on Wi-Fi</string>
+    <string name="lan_stopping">Stopping sharing…</string>
+    <string name="lan_uncertain">Sharing cleanup is not confirmed. Retry stopping sharing or stop the application.</string>
+    <string name="lan_app_stopped">Start the application before sharing.</string>
+    <string name="lan_unavailable">Wi-Fi sharing is unavailable on the current connection.</string>
+    <string name="lan_no_wifi">Connect to Wi-Fi before sharing.</string>
+    <string name="lan_select_address">Select a Wi-Fi address</string>
+    <string name="lan_start">Start sharing</string>
+    <string name="lan_stop">Stop sharing</string>
+    <string name="lan_status_unavailable">Sharing status could not be checked. The address is hidden until the current status is confirmed.</string>
+    <string name="lan_action_failed">Sharing could not be changed. Check the application and Wi-Fi status, then try again.</string>
+    <string name="lan_closed_error">Sharing stopped after an error.</string>
+    <string name="lan_copy">Copy address</string>
+    <string name="lan_ipv4">IPv4</string>
+    <string name="lan_ipv6">IPv6</string>
+    <string name="lan_copy_ipv6">Copy IPv6 address</string>
+    <string name="lan_copied">Address copied</string>
+    <string name="lan_qr_description">QR code for the current application Wi-Fi address</string>
+    <string name="lan_qr_unavailable">A QR code could not be created for this address. You can copy the full address instead.</string>
+    <string name="lan_clipboard_failed">The current address could not be copied. Review the sharing status and try again.</string>
+</resources>

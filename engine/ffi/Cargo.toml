@@ -18,4 +18,5 @@ wasmdroid-engine = { path = ".." }
 wasmdroid-wasmer-local = { path = "../drivers/wasmer-local", optional = true, default-features = false }
 uniffi.workspace = true
 serde_json.workspace = true
+serde.workspace = true
 thiserror.workspace = true

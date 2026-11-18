@@ -1,0 +1,55 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>Local notes example</title>
+<style>
+  :root { color-scheme: light dark; font: 1rem/1.55 system-ui, sans-serif; }
+  body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem; }
+  h1 { line-height: 1.2; }
+  textarea { box-sizing: border-box; width: 100%; min-height: 18rem; padding: .8rem; font: inherit; }
+  button { margin: .8rem .5rem 0 0; padding: .6rem .9rem; font: inherit; }
+  .detail { opacity: .8; }
+</style>
+<main>
+  <h1>Local notes example</h1>
+  <p>A small first-party static page. No account or database is required.</p>
+  <label for="note">Your note</label>
+  <textarea id="note" autocomplete="off" spellcheck="true" placeholder="Write a note here"></textarea>
+  <div><button id="save" type="button">Save in this browser</button><button id="export" type="button">Download a text copy</button></div>
+  <p id="status" role="status" aria-live="polite">Notes stay private to this browser origin.</p>
+  <p class="detail">Browser storage is separate from the service dataset. Clearing web data removes this saved note. If the service address or port changes, the old note may not be visible. Keep a text copy of anything important.</p>
+  <p class="detail">This is an unverified example asset, not an accepted WasmDroid recipe or an Android compatibility claim.</p>
+</main>
+<script>
+  'use strict';
+  const note = document.getElementById('note');
+  const status = document.getElementById('status');
+  const key = 'wasmdroid-first-party-notes-v1';
+  try {
+    note.value = localStorage.getItem(key) || '';
+    if (note.value) status.textContent = 'Saved note loaded from this browser origin.';
+  } catch {
+    status.textContent = 'Browser storage is unavailable. Keep a text copy before leaving.';
+  }
+  document.getElementById('save').addEventListener('click', () => {
+    try {
+      localStorage.setItem(key, note.value);
+      status.textContent = 'Saved in this browser origin.';
+    } catch {
+      status.textContent = 'The note could not be saved. Keep a text copy before leaving.';
+    }
+  });
+  document.getElementById('export').addEventListener('click', () => {
+    const url = URL.createObjectURL(new Blob([note.value], {type: 'text/plain;charset=utf-8'}));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'local-note.txt';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status.textContent = 'Text download requested. Availability depends on this browser.';
+  });
+</script>
+</html>

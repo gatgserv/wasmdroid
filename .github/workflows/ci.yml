@@ -69,7 +69,7 @@ jobs:
         with:
           cmdline-tools-version: '15859902'
           packages: platform-tools
-      - run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
+      - run: sdkmanager "platforms;android-37.0" "build-tools;36.0.0" "ndk;28.2.13676358"
       - run: ./gradlew.bat :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug '-PwasmdroidAbis=arm64-v8a,x86_64' -PwasmdroidRuntime=true
         working-directory: android
 

@@ -21,7 +21,18 @@ wasmer-config = { version = "=0.704.2", default-features = false }
 webc = "12"
 async-trait = "0.1"
 serde.workspace = true
+serde_json.workspace = true
 url = "2.5"
 wasmer-wasix-types = "=0.704.2"
 virtual-net = { version = "=0.704.2", default-features = false, features = ["tokio"] }
+virtual-mio = { version = "=0.704.2", default-features = false }
 libc = "0.2"
+shared-buffer = "=0.1.4"
+ciborium = "=0.2.2"
+wasmparser = { version = "=0.255.0", default-features = false, features = ["std", "validate", "features", "simd"] }
+
+[build-dependencies]
+sha2 = "0.10"
+
+[dev-dependencies]
+tempfile = "3"

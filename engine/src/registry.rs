@@ -1,4 +1,5 @@
 //! Runtime-neutral registry boundary. Only the Wasmer adapter knows GraphQL semantics.
+pub(crate) mod http;
 pub mod wasmer;
 use crate::{Result, api::Artifact};
 use serde::{Deserialize, Serialize};
@@ -9,6 +10,12 @@ pub struct RegistryPackage {
     pub reference: crate::api::ArtifactReference,
     pub publisher: String,
     pub description: String,
+    /// Timestamp for the exact release, in RFC 3339 when available.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub released_at: Option<String>,
+    /// WebC version returned for this release when requesting a v3 distribution.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub webc_version: Option<u8>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

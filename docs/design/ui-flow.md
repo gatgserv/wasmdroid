@@ -1,7 +1,8 @@
 # Proposed Android UI flow
 
-Prepared before implementing the product screens, as requested by George.
-The current application still contains only the Stage 0 laboratory screen.
+Design proposal prepared before implementation.
+The product screens and data-management child screen are now implemented locally;
+visual, accessibility and device acceptance remain pending the integrated phase.
 The interactive conversation sketches use illustrative applications, not verified
 catalog entries. No placeholder example may become an installable production item.
 
@@ -57,4 +58,66 @@ Use Jetpack Compose and Material 3, accessible touch targets, system light/dark
 appearance, and localized string resources. Keep FFI calls off the main thread.
 Navigation/UI state is thin; lifecycle, persistence, capability checks, progress,
 logs and endpoints belong to the Rust engine. The proposed visual style is a
-working starting point and can be adjusted from George's feedback.
+starting point for further design feedback.
+
+## Application data child screen
+
+Shown as a scheme in conversation before the Compose implementation:
+
+```text
+Data — application name
+  Files / Backup
+  folder list and relative navigation
+  selected file: Export / Delete
+  Import file / New folder
+  Save backup / Restore backup
+```
+
+The normal application card links to its data without exposing host paths or raw
+volume IDs. Multiple data sets use a selector; advanced mode shows volume names.
+Mutations and consistent exports/backups require inactive services. Android SAF
+grants access only to the selected document; broad storage permission is not used.
+Replacement and deletion identify the selected file. Restore explains that it
+creates new data and preserves the previous volume. Busy/progress/cancel and
+completion/error states come from the actual transfer and metadata operations.
+
+## Advanced output and terminal
+
+Running application cards also include the lifecycle-aware process RSS/CPU
+summary shown as a scheme before implementation. See
+[driver and resources](driver-and-resources.md#resource-summary).
+
+Shown in conversation before the live log screen and terminal frontend:
+
+```text
+Logs — application
+  Both / stdout / stderr     Follow live output
+  scrollable retained output
+  Reload
+
+Terminal — application
+  terminal viewport and cursor
+  Esc / Tab / interrupt / EOF / arrow keys
+  keyboard / text input
+```
+
+The log screen is implemented locally. It exposes retention gaps and independent
+stream filtering, without presenting plain log text as an interactive terminal.
+Native stdin/TTY and generation-scoped controls are implemented alongside a
+worker-owned VT100 model and a native Canvas/IME terminal child destination.
+TTY and input can be selected in advanced service configuration. The terminal
+offers keyboard, special keys, history, manual copy/paste and retained final
+display pages; runtime, visual and accessibility acceptance remain pending.
+
+
+## Group management addition
+
+The conversation schemes were shown before implementing native StackScreens.
+My Apps now has Apps/Groups selectors, current membership and paged summaries.
+Advanced import uses SAF or a bounded private YAML/JSON draft, explicit preview,
+then digest-pinned creation without starting guests. Group details expose actual
+member states, separate group start/stop (including cancellation during startup),
+individual controls and the existing data/log/terminal/declared-web destinations.
+Definition removal confirms preservation of packages and all datasets. See
+[stack UI scope and pending acceptance](stack-ui.md). This is local source, not
+physical visual, accessibility, provider or runtime acceptance.

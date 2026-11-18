@@ -1,6 +1,6 @@
 # Plan: WasmDroid, un „Docker Desktop” pentru Wasmer pe Android
 
-*Versiunea 3, 16 noiembrie 2026. Include deciziile lui George (secțiunea 9).*
+*Versiunea 4, 18 noiembrie 2026. Include deciziile pentru prima versiune Android (secțiunea 9).*
 
 **Pe scurt:** WasmDroid e o aplicație gratuită și open-source pe Google Play, întâi pentru Android, cu UI nativ (Jetpack Compose). E făcută pentru utilizatori obișnuiți, care pornesc un pachet cu un tap; terminalul și logurile apar doar în „Mod avansat”. Docker local vine eventual mai târziu, dar arhitectura e pregătită de acum.
 
@@ -60,24 +60,24 @@ Pe Android avem JIT, rulare în fundal și o politică de magazin mai permisivă
 
 ### Etapa 1: MVP Android pentru utilizatori obișnuiți (8–10 săptămâni)
 
-**Principiu de design:** utilizatorul nu vede comenzi, porturi sau variabile de mediu. Vede „aplicații” pe care le instalează, le pornește și le deschide. Majoritatea pachetelor Wasmer sunt unelte pentru dezvoltatori, așa că pentru acest public valoarea vine din **pachetele cu interfață web** (site-uri, editoare, wiki, jocuri, unelte cu UI) care se deschid direct în aplicație.
+**Principiu de design:** utilizatorul găsește pachetele în Store, descarcă o versiune și creează un serviciu pe telefon. Pachetele cu interfață web se deschid direct din aplicație. Setările tehnice se configurează în formularul serviciului.
 
-- **Catalog curat („Store”)**: o listă selectată de noi, cu pachete testate pe Android. Fiecare are iconiță, descriere pe înțeles, capturi și o etichetă „merge pe telefonul tău”. Lista e un fișier JSON hostat de noi, deci o actualizăm fără update de aplicație. Căutarea în tot registry-ul Wasmer există, dar e marcată „neverificat”.
+- **Store**: Wasmer Registry este singura sursă de pachete afișate pentru căutare. Pachetele sunt publice. Store afișează avertismentul de compatibilitate înainte de descărcare și configurare.
 - **Instalare cu un tap**: descărcare cu progres, cache adresat după conținut (sha256), spațiu ocupat, dezinstalare.
-- **Configurare automată**: aplicația alege singură comanda, portul (alocat automat), volumul de date și setările implicite dintr-un **„rețetar” per pachet** inclus în catalog. Utilizatorul doar apasă „Pornește”.
+- **Creare serviciu**: din lista pachetelor descărcate, utilizatorul deschide formularul cu pachetul și o comandă precompletate. Salvarea creează serviciul; pornirea rămâne o acțiune explicită.
 - **Pornire / oprire / repornire**; stări clare, în limbaj simplu („Pornește…”, „Rulează”, „Oprit”, „A dat eroare”) peste automatul tehnic de stări (vezi 6.4).
-- **„Deschide”**: pachetele cu UI web se deschid într-un WebView din aplicație sau în browser, fără ca utilizatorul să știe ce e `localhost:8080`.
+- **„Deschide”**: pachetele cu UI web se deschid într-un WebView cu profil separat pentru fiecare aplicație sau în browserul extern. Controlul complet al traficului WebView se amână.
 - **Rulare în fundal** prin Foreground Service, cu notificare care arată câte aplicații rulează și buton „Oprește tot”.
 - **Erori explicate** pe înțeles („nu mai e spațiu”, „pachetul nu e compatibil”), cu buton „Trimite raport”.
-- **Mod avansat** (activat din Setări, ascuns implicit): loguri live, terminal interactiv (TTY), editare comandă/argumente/env/porturi/volume, rulare de pachete CLI din registry.
+- **Resurse**: monitorizare RAM și CPU la nivelul procesului de serviciu și timeout configurabil. Un câmp timeout gol permite rularea fără limită de timp. Limitele stricte de RAM și CPU se amână.
+- **Mod avansat** (activat din Setări, ascuns implicit): loguri live, terminal interactiv (TTY) și controale tehnice suplimentare.
 - Cache cu modulele deja compilate, ca a doua pornire să fie instantanee.
 - Aplicație gratuită, fără conturi; doar pachete publice.
 
 ### Etapa 2: mai mult control (4–6 săptămâni)
 - Date ale aplicațiilor: backup/restaurare și import/export fișiere (prin Storage Access Framework). În modul avansat: volume numite.
 - Pornire automată la boot și repornire la eroare (comutatoare simple; în spate, politici de restart `no` / `on-failure` / `always`).
-- Limite de resurse (memorie maximă, CPU), cu valori implicite sigure și editare în modul avansat.
-- „Pachete combinate” (de ex. aplicație + bază de date) definite în catalog prin fișierul „stack” (6.10).
+- „Pachete combinate” (de ex. aplicație + bază de date) definite prin importul unui fișier „stack” (6.10), cu pachete din registry sau artefacte locale instalate.
 - Partajare în rețeaua locală („Deschide de pe laptop”), cu cod QR; dezactivată implicit.
 - Widget și Quick Settings tile pentru pornire și oprire rapidă.
 - Mod avansat: import de pachete locale (`.webc` / `.wasm`).
@@ -119,7 +119,7 @@ Pe Android avem JIT, rulare în fundal și o politică de magazin mai permisivă
 - **Registry layer**: trait `Registry` cu implementarea `WasmerRegistry` (GraphQL + descărcare webc). Mai târziu adăugăm `OciRegistry` (Docker Hub, GHCR) fără să modificăm restul.
 - **Content store**: blob-uri adresate prin sha256, organizate după modelul OCI image layout. Un pachet webc e un blob plus un manifest. O imagine OCI va fi un set de layere plus un manifest. Același store le acceptă pe ambele.
 - **State DB (SQLite)**: tabele `artifacts`, `instances`, `volumes`, `port_bindings`, `events`. Fiecare rând are coloanele `kind` și `driver` (vezi 6.1).
-- **Supervisor**: pornește instanțele pe thread-uri sau task-uri separate, aplică politici de restart, limite de memorie și timeout, colectează codul de ieșire.
+- **Supervisor**: pornește instanțele pe thread-uri sau task-uri separate, aplică politici de restart și timeout-ul opțional, colectează codul de ieșire și expune consumul RAM și CPU observat.
 - **Log store**: buffer circular per instanță în memorie, plus fișier rotit pe disc. Suportă `follow`, `since`, `tail`.
 - **Network manager**: alocă porturi pe host, ține evidența legăturilor `host:port → instanță:port` și detectează conflictele.
 - **Volume manager**: directoare în spațiul privat al aplicației (`files/volumes/<nume>`), montate în WASIX ca „mapped dirs”.
@@ -208,20 +208,20 @@ Datorită deciziilor din secțiunea 6, fiecare variantă înseamnă un **driver 
 - ce procent din telefoanele utilizatorilor noștri au pKVM;
 - dacă Google Play acceptă o aplicație care descarcă imagini Linux complete.
 
-Pentru un public de utilizatori obișnuiți, Docker local trebuie să arate la fel ca pachetele Wasm: un tap, iar imaginile vin tot din catalogul curat.
+Pentru un public de utilizatori obișnuiți, fluxul Docker local va urmări aceeași simplitate ca fluxul Wasm. Sursa imaginilor Docker se decide în etapa 4.
 
 ---
 
 ## 8. Riscuri principale
 
-1. **Politica Google Play privind codul descărcat** (Device and Network Abuse). Fiind singurul canal de distribuție, e riscul principal. *Atenuare:* Wasm rulează într-un sandbox fără acces la API-urile Android; descriere clară în Play Console; catalog curat; trimitem devreme o versiune de test intern/închis ca să aflăm verdictul înainte de investiții mari.
-2. **Catalog prea sărac pentru utilizatori obișnuiți.** Majoritatea pachetelor Wasmer sunt pentru dezvoltatori. *Atenuare:* în etapa 0 facem și un inventar al pachetelor cu UI web care merg pe Android; dacă sunt prea puține, împachetăm noi câteva aplicații populare open-source.
+1. **Politica Google Play privind codul descărcat** (Device and Network Abuse). Fiind singurul canal de distribuție, e riscul principal. *Atenuare:* Wasm rulează într-un sandbox fără acces la API-urile Android; descriere clară în Play Console; validăm local un APK intern și solicităm separat verdictul pentru distribuția prin Google Play.
+2. **Compatibilitate variabilă în Wasmer Registry.** Pachetele publice pot folosi formate, comenzi sau facilități nesuportate. *Atenuare:* afișăm avertismentul de compatibilitate, validăm versiunea descărcată și verificăm exemple reale pe telefon.
 3. **iOS fără JIT** (vezi 8.1). Nu blochează acum, fiindcă iOS e amânat.
 4. **Compatibilitatea WASIX pe Android** (socket-uri, thread-uri, semnale). *Atenuare:* etapa 0 testează exact asta.
 5. **Dimensiunea aplicației** (LLVM e mare). *Atenuare:* livrăm doar Cranelift (+ Singlepass), LLVM opțional.
 6. **Consum de baterie și „kill” agresiv** de la producători (Xiaomi, Samsung). *Atenuare:* Foreground Service, ghid pentru setările de optimizare a bateriei, restart automat.
 7. **Schimbări în API-ul registry-ului Wasmer.** *Atenuare:* izolare în `WasmerRegistry`, folosirea crate-urilor oficiale.
-8. **Costuri de operare pentru o aplicație gratuită** (hostarea catalogului, rapoarte de erori). *Atenuare:* catalog static (JSON pe GitHub Pages sau un CDN gratuit), fără backend propriu.
+8. **Costuri de operare pentru o aplicație gratuită.** Store folosește serviciul public Wasmer Registry. Rapoartele sunt trimise explicit de utilizator prin formularul de proiect.
 
 ### 8.1 iOS fără JIT: dezavantaje și soluții
 **Dezavantaje:**
@@ -240,7 +240,7 @@ Pentru un public de utilizatori obișnuiți, Docker local trebuie să arate la f
 
 ---
 
-## 9. Decizii luate (16 nov. 2026)
+## 9. Decizii luate (16–18 nov. 2026)
 
 | # | Întrebare | Decizie |
 |---|---|---|
@@ -251,20 +251,21 @@ Pentru un public de utilizatori obișnuiți, Docker local trebuie să arate la f
 | 5 | Model de business | Gratuit |
 | 6 | Docker | Execuție locală, dar nu în lunile următoare; se reevaluează după ce aplicația Wasmer-only crește |
 | 7 | Conturi / pachete private | Nu, în etapa 1 |
-
 | 8 | Open-source | Da |
 | 9 | Nume | **WasmDroid**; doar Android în prima etapă |
-| 10 | Licență proiect | **Apache-2.0**, confirmată de George la începerea dezvoltării |
+| 10 | Licență proiect | **Apache-2.0** |
+| 11 | Sursa Store | Exclusiv Wasmer Registry. |
+| 12 | Resurse în prima versiune | RAM/CPU observat și timeout opțional, inclusiv rulare fără limită de timp. Limitele stricte se amână. |
+| 13 | WebView în prima versiune | Profil separat pentru fiecare aplicație. Controlul complet al traficului se amână. |
+| 14 | Livrabil intern | APK Android cu runtime activat și acceptanță pe telefonul conectat. |
 
 ---
 
 ## 10. Pașii următori concreți
 
-1. Creăm repository-ul public `wasmdroid` (monorepo: `engine/` Rust, `android/`), cu licență open-source (propunere: Apache-2.0 sau MIT, compatibile cu licența MIT a Wasmer), README și reguli de contribuție, inclusiv pentru catalog.
-2. Etapa 0: spike-ul Android, cu un raport de măsurători (mărime, memorie, viteză) și cu inventarul pachetelor cu UI web care merg pe telefon.
-3. Trimitem spike-ul ca test intern în Google Play, ca să verificăm politica privind codul descărcat.
-4. Scriem specificația Engine API (tipurile din 6.2–6.4) și formatul catalogului/„rețetarului” înainte de orice UI.
-5. Schițe de ecrane (Store, Aplicațiile mele, Detalii, Setări/Mod avansat).
+1. Conectăm Store în modul normal la fluxul Wasmer Registry de căutare, descărcare și creare a serviciului.
+2. Compilăm APK-ul intern cu runtime activat și îl verificăm pe telefonul conectat, inclusiv cu pachete reale.
+3. Înregistrăm comenzi, revizie, ABI, rezultate și limitări în `docs/verification`. Evaluarea separată de distribuție prin Google Play rămâne pentru etapa de lansare.
 
 ---
 

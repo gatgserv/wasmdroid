@@ -4,8 +4,32 @@ use crate::{
 };
 use rusqlite::{Connection, OptionalExtension, params};
 use std::path::Path;
+mod applications;
+mod automation;
+mod browser_identity;
+mod browser_origins;
+mod configuration;
+mod effective_worker;
+mod group_network_permissions;
 mod lifecycle;
+mod managed_runs;
+mod network_permissions;
+mod stack_updates;
+mod stacks;
+pub use applications::{
+    ApplicationMember, ApplicationPage, ApplicationRecord, ApplicationTarget, ApplicationTargetKind,
+};
+pub use automation::{
+    AutomaticStartSource, RecoveryCandidate, RecoveryPage, RunAuthority, RunOutcome, RunStartSource,
+};
+pub use browser_origins::BrowserOriginCapture;
+pub use effective_worker::EffectiveWorkerSpec;
+pub use group_network_permissions::{
+    GroupNetworkMember, GroupNetworkReview, GroupNetworkSource, GroupPermissionChoice,
+};
 pub use lifecycle::{EngineEvent, InstanceRecord, VolumeRecord};
+pub use managed_runs::ManagedRunStart;
+pub use network_permissions::NetworkPermissionSource;
 
 pub struct StateDb {
     connection: Connection,
@@ -17,7 +41,7 @@ impl StateDb {
         connection.pragma_update(None, "foreign_keys", "ON")?;
         connection.busy_timeout(std::time::Duration::from_secs(5))?;
         let version: u32 = connection.pragma_query_value(None, "user_version", |row| row.get(0))?;
-        if version > 2 {
+        if version > 7 {
             return Err(EngineError::Unsupported(format!(
                 "database schema {version}"
             )));
@@ -45,6 +69,23 @@ impl StateDb {
                 }
             }
             transaction.commit()?;
+        }
+        if version < 3 {
+            connection.execute_batch(include_str!("../migrations/003_stacks.sql"))?;
+        }
+        if version < 4 {
+            connection.execute_batch(include_str!("../migrations/004_stack_updates.sql"))?;
+        }
+        if version < 5 {
+            connection.execute_batch(include_str!("../migrations/005_automation.sql"))?;
+        }
+        if version < 6 {
+            connection.execute_batch(include_str!("../migrations/006_browser_origins.sql"))?;
+        }
+        if version < 7 {
+            connection.execute_batch(include_str!(
+                "../migrations/007_group_network_permissions.sql"
+            ))?;
         }
         Ok(Self { connection })
     }

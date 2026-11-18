@@ -1,0 +1,18 @@
+<resources>
+    <string name="application_partial">Some parts are stopped</string>
+    <string name="application_stopping">Stopping…</string>
+    <string name="application_restart_pending">Restart scheduled</string>
+    <string name="application_unavailable">Status unavailable</string>
+    <string name="application_failed">The app stopped after an error. Start it to try again.</string>
+    <string name="application_start_missing">Start missing parts</string>
+    <string name="application_details">App details</string>
+    <string name="application_hide_details">Hide details</string>
+    <string name="application_parts">Parts of this app</string>
+    <string name="application_part">Part %1$d</string>
+    <string name="application_part_state">%1$s: %2$s</string>
+    <string name="application_part_data">Manage data: %1$s</string>
+    <string name="application_preserve">Starting the app starts its required parts. Stopping keeps its data.</string>
+    <string name="application_more">Show more apps</string>
+    <string name="application_remove_title">Remove %1$s?</string>
+    <string name="application_remove_preserves">Your files, browser data and downloaded packages will be kept.</string>
+</resources>

@@ -51,10 +51,24 @@ impl<'a> VolumeManager<'a> {
         Ok(file)
     }
     pub fn create(&self, name: &str, labels: BTreeMap<String, String>) -> Result<VolumeRecord> {
+        self.create_record(name, labels, true)
+    }
+    pub fn create_new(&self, name: &str, labels: BTreeMap<String, String>) -> Result<VolumeRecord> {
+        self.create_record(name, labels, false)
+    }
+    fn create_record(
+        &self,
+        name: &str,
+        labels: BTreeMap<String, String>,
+        reuse: bool,
+    ) -> Result<VolumeRecord> {
         validate_name(name)?;
         let _lock = self.lock(name, false)?;
         match self.session.state().volume(name) {
             Ok(record) => {
+                if !reuse {
+                    return Err(EngineError::Conflict("volume already exists".into()));
+                }
                 if !exists(&self.data, name)? {
                     return Err(EngineError::Conflict(
                         "registered volume data is missing; not recreated".into(),
@@ -88,7 +102,15 @@ impl<'a> VolumeManager<'a> {
         self.session.state().volume(name)
     }
     pub fn lease(&self, name: &str, read_only: bool) -> Result<VolumeDirectory> {
-        let lock = self.lock(name, true)?;
+        self.lease_mode(name, read_only, true)
+    }
+    /// Administrative imports and consistent snapshots exclude every guest/file
+    /// lease for their entire lifetime. Stop users of the volume first.
+    pub fn exclusive(&self, name: &str) -> Result<VolumeDirectory> {
+        self.lease_mode(name, false, false)
+    }
+    fn lease_mode(&self, name: &str, read_only: bool, shared: bool) -> Result<VolumeDirectory> {
+        let lock = self.lock(name, shared)?;
         self.session.state().volume(name)?;
         if self
             .session
@@ -112,6 +134,7 @@ impl<'a> VolumeManager<'a> {
                 _owner: self.session.ownership(),
             }),
             read_only,
+            exclusive: !shared,
         })
     }
     /// Explicitly deletes this named volume's data; instance removal never calls it.
@@ -192,6 +215,7 @@ fn exists(dir: &Dir, name: &str) -> Result<bool> {
 pub struct VolumeDirectory {
     inner: Arc<VolumeInner>,
     read_only: bool,
+    exclusive: bool,
 }
 struct VolumeInner {
     dir: Dir,
@@ -201,7 +225,51 @@ struct VolumeInner {
 
 pub struct VolumeEntry {
     pub name: std::ffi::OsString,
-    pub metadata: cap_std::fs::Metadata,
+    pub metadata: VolumeMetadata,
+}
+pub struct VolumeEntries {
+    inner: cap_std::fs::ReadDir,
+    _lease: Arc<VolumeInner>,
+}
+impl Iterator for VolumeEntries {
+    type Item = std::io::Result<VolumeEntry>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|entry| {
+            let entry = entry?;
+            Ok(VolumeEntry {
+                name: entry.file_name(),
+                metadata: metadata(entry.metadata()?),
+            })
+        })
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct VolumeMetadata {
+    pub is_dir: bool,
+    pub is_file: bool,
+    pub is_symlink: bool,
+    pub len: u64,
+    pub accessed_ns: u64,
+    pub modified_ns: u64,
+    pub created_ns: u64,
+}
+fn metadata(value: cap_std::fs::Metadata) -> VolumeMetadata {
+    let ns = |time: std::io::Result<cap_std::time::SystemTime>| {
+        time.ok()
+            .and_then(|time| time.into_std().duration_since(std::time::UNIX_EPOCH).ok())
+            .and_then(|time| time.as_nanos().try_into().ok())
+            .unwrap_or(0)
+    };
+    VolumeMetadata {
+        is_dir: value.is_dir(),
+        is_file: value.is_file(),
+        is_symlink: value.file_type().is_symlink(),
+        len: value.len(),
+        accessed_ns: ns(value.accessed()),
+        modified_ns: ns(value.modified()),
+        created_ns: ns(value.created()),
+    }
 }
 
 #[derive(Default, Clone, Copy)]
@@ -214,6 +282,46 @@ pub struct VolumeOpenOptions {
     pub create_new: bool,
 }
 impl VolumeDirectory {
+    pub(crate) fn exclusive_write(&self) -> bool {
+        self.exclusive && !self.read_only
+    }
+    pub(crate) fn publish_new_from(
+        &self,
+        source: &Dir,
+        name: &Path,
+        target: &Path,
+    ) -> std::io::Result<()> {
+        if !self.exclusive_write() {
+            return Err(std::io::ErrorKind::PermissionDenied.into());
+        }
+        relative(name)?;
+        relative(target)?;
+        source.hard_link(name, &self.inner.dir, target)
+    }
+    pub(crate) fn sync_directory(&self) -> std::io::Result<()> {
+        self.sync_directory_at(Path::new("."))
+    }
+    pub(crate) fn sync_directory_at(&self, path: &Path) -> std::io::Result<()> {
+        if !self.exclusive_write() {
+            return Err(std::io::ErrorKind::PermissionDenied.into());
+        }
+        relative(path)?;
+        let mut checked = std::path::PathBuf::new();
+        for component in path.components() {
+            if let Component::Normal(name) = component {
+                checked.push(name);
+                let metadata = self.inner.dir.symlink_metadata(&checked)?;
+                if !metadata.is_dir() || metadata.file_type().is_symlink() {
+                    return Err(std::io::ErrorKind::PermissionDenied.into());
+                }
+            }
+        }
+        #[cfg(unix)]
+        self.inner.dir.open_dir(path)?.into_std_file().sync_all()?;
+        // Windows does not provide the same directory-flush contract. Local
+        // tests verify content/atomic no-replace; Android uses the Unix branch.
+        Ok(())
+    }
     fn writable(&self) -> std::io::Result<()> {
         if self.read_only {
             Err(std::io::ErrorKind::PermissionDenied.into())
@@ -276,29 +384,49 @@ impl VolumeDirectory {
         relative(to.as_ref())?;
         self.inner.dir.rename(from, &self.inner.dir, to)
     }
-    pub fn metadata(&self, path: impl AsRef<Path>) -> std::io::Result<cap_std::fs::Metadata> {
+    pub(crate) fn publish_from(
+        &self,
+        source: &Dir,
+        name: &Path,
+        target: &Path,
+    ) -> std::io::Result<()> {
+        self.writable()?;
+        relative(name)?;
+        relative(target)?;
+        source.rename(name, &self.inner.dir, target)
+    }
+    pub fn metadata(&self, path: impl AsRef<Path>) -> std::io::Result<VolumeMetadata> {
         relative(path.as_ref())?;
-        self.inner.dir.metadata(path)
+        self.inner.dir.metadata(path).map(metadata)
+    }
+    pub fn symlink_metadata(&self, path: impl AsRef<Path>) -> std::io::Result<VolumeMetadata> {
+        relative(path.as_ref())?;
+        self.inner.dir.symlink_metadata(path).map(metadata)
     }
     pub fn read_dir(&self, path: impl AsRef<Path>) -> std::io::Result<Vec<VolumeEntry>> {
+        let entries = self
+            .entries(path)?
+            .take(100_001)
+            .collect::<std::io::Result<Vec<_>>>()?;
+        if entries.len() > 100_000 {
+            return Err(std::io::Error::other(
+                "directory listing exceeds entry budget",
+            ));
+        }
+        Ok(entries)
+    }
+    pub fn entries(&self, path: impl AsRef<Path>) -> std::io::Result<VolumeEntries> {
         relative(path.as_ref())?;
-        self.inner
-            .dir
-            .read_dir(path)?
-            .map(|entry| {
-                let entry = entry?;
-                Ok(VolumeEntry {
-                    name: entry.file_name(),
-                    metadata: entry.metadata()?,
-                })
-            })
-            .collect()
+        Ok(VolumeEntries {
+            inner: self.inner.dir.read_dir(path)?,
+            _lease: self.inner.clone(),
+        })
     }
     pub fn read_only(&self) -> bool {
         self.read_only
     }
 }
-fn relative(path: &Path) -> std::io::Result<()> {
+pub(crate) fn relative(path: &Path) -> std::io::Result<()> {
     if path.components().any(|component| {
         matches!(
             component,

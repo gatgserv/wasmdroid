@@ -9,8 +9,11 @@ use std::{
     },
     time::Instant,
 };
-use wasmdroid_engine::{api::Artifact, store::ContentStore};
-use wasmer_config::package::{NamedPackageId, PackageId};
+use wasmdroid_engine::{
+    api::{Artifact, ArtifactKind},
+    store::ContentStore,
+};
+use wasmer_config::package::{NamedPackageId, PackageHash, PackageId};
 use wasmer_wasix::{
     Pipe, PluggableRuntime, WasiRuntimeError,
     bin_factory::BinaryPackage,
@@ -200,6 +203,18 @@ pub(crate) fn load_verified_package(
     root: &Artifact,
     images: &[Artifact],
 ) -> Result<BinaryPackage> {
+    if root.kind == ArtifactKind::Wasm {
+        anyhow::ensure!(
+            images.len() == 1 && images[0].digest == root.digest,
+            "raw Wasm cannot declare package dependencies"
+        );
+        let bytes = store.read_verified(&root.digest, root.size_bytes)?;
+        anyhow::ensure!(
+            bytes.len() as u64 == root.size_bytes,
+            "installed size mismatch"
+        );
+        return crate::local_package::raw_package(bytes, &root.digest);
+    }
     let mut containers = HashMap::new();
     let mut source = InMemorySource::new();
     for image in images {
@@ -209,18 +224,35 @@ pub(crate) fn load_verified_package(
             "installed size mismatch"
         );
         let container = Container::from_bytes_and_version(bytes.into(), webc::Version::V3)?;
-        let named = image
-            .reference
-            .as_str()
-            .strip_prefix("wasmer.io/")
-            .context("unsupported registry in offline set")?;
-        let (name, version) = named
-            .rsplit_once('@')
-            .context("offline images must be version pinned")?;
-        let id = PackageId::Named(NamedPackageId {
-            full_name: name.into(),
-            version: version.parse()?,
-        });
+        // A verified outer WebC digest authenticates the publisher's bytes,
+        // not the correctness of its self-declared atom signatures. WASIX uses
+        // those signatures as compiled-cache keys, so verify the actual atoms
+        // before any command/dependency can look up or populate that cache.
+        for (name, atom) in container.atoms() {
+            let declared = wasmer_wasix::runtime::package_loader::to_module_hash(
+                container.manifest().atom_signature(&name)?,
+            );
+            anyhow::ensure!(
+                declared == wasmer_types::ModuleHash::new(&atom),
+                "installed WebC atom digest mismatch"
+            );
+        }
+        let id = if image.reference == wasmdroid_engine::local_import::reference(&image.digest)? {
+            PackageId::Hash(image.digest.as_str().parse::<PackageHash>()?)
+        } else {
+            let named = image
+                .reference
+                .as_str()
+                .strip_prefix("wasmer.io/")
+                .context("unsupported registry in offline set")?;
+            let (name, version) = named
+                .rsplit_once('@')
+                .context("offline images must be version pinned")?;
+            PackageId::Named(NamedPackageId {
+                full_name: name.into(),
+                version: version.parse()?,
+            })
+        };
         let hash = WebcHash::parse_hex(image.digest.as_str().trim_start_matches("sha256:"))?;
         let info = PackageInfo::from_manifest(id, container.manifest(), container.version())?;
         // Descriptive only: OfflineLoader never opens URLs.

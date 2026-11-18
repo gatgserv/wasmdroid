@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="report_send">Send report</string>
+    <string name="report_review">Review report</string>
+    <string name="report_review_detail">Review the information below, then open the GitHub issue form. You can edit it before submitting. A GitHub account may be required.</string>
+    <string name="report_excludes">This report excludes application names, documents, guest output, commands, environment variables and network addresses.</string>
+    <string name="report_open_github">Open GitHub form</string>
+    <string name="report_share_unavailable">The GitHub form could not be opened. You can select and copy the report text instead.</string>
+</resources>

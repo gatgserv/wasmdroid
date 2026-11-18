@@ -1,12 +1,29 @@
-//! Stage 0 finite WASI probe; intentionally not a lifecycle driver yet.
-//! Host filesystem and host networking are not enabled.
+//! Wasmer backend: supervised package execution and finite acceptance probes.
+//! Filesystem/network access uses explicit virtual capabilities, never ambient
+//! host directories, terminal descriptors or unrestricted host networking.
 #[cfg(not(any(feature = "cranelift", feature = "singlepass")))]
 compile_error!("Select the cranelift or singlepass driver feature");
 pub mod benchmark;
 pub mod cancellation;
+mod compiled_cache;
 pub mod http_execution;
+pub mod local_package;
 mod loopback;
+mod service_broker;
+pub mod service_driver;
+pub mod service_egress;
+pub mod service_egress_android;
+pub mod service_egress_regrant;
+pub mod service_execution;
+mod service_input;
+pub mod service_lan;
+mod service_network;
+mod service_startup_port;
+mod service_stdio;
+pub use service_input::InputControl;
+pub use service_stdio::TerminalHandle;
 mod tasks;
+mod volume_fs;
 pub mod webc_execution;
 use std::{io::Read, sync::Arc};
 use wasmer::{Module, Store};

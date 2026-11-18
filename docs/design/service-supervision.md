@@ -51,7 +51,43 @@ the project still targets API 28. Isolated workers have different permissions,
 so access to verified blobs and explicitly selected volumes must be brokered.
 They are not equivalent to same-UID named service processes. Do not silently
 raise the minimum API or grant broad filesystem/network access to simplify this.
-No worker-process implementation or reliable forced-stop acceptance exists yet.
+The local development implementation now has a common Android `EngineService`
+and eight private same-UID worker slots for API 28 compatibility. Each controller
+has a fresh generation and owns one worker containing all of its WASIX work.
+Registry, database and volume management remain common. The engine lock is
+duplicated over private Binder IPC and retained by the worker, preventing a new
+coordinator from falsely recovering live work after coordinator death.
+
+Workers link to coordinator Binder death and terminate their own process if the
+owner disappears. Stop fences guest creation, closes ingress and requests guest
+shutdown; after the grace period the controller requests termination through
+that exact worker Binder endpoint. Workers kill only their own PID. Slots and
+terminal metadata are released after observed Binder death, not after a stop
+request or main guest exit. Normal exit uses a result acknowledgement before
+process termination. A forced owner stop records an unknown guest exit code,
+with a reason, instead of inventing zero. Dead remains terminal; explicit retry
+atomically creates a new identity and preserves volume references.
+
+This code has been integrated locally, not accepted through physical-device
+verification yet. The user requested completing development before CI; no new
+CI runs are triggered by these local changes. The fixed slot count is an
+implementation capacity bound, not a claim of unlimited concurrent services.
+Worker RSS/startup overhead and service/UI-closure acceptance remain pending.
+
+The native facade now uses the worker-resident RuntimeDriver and private host
+termination callbacks. Live RSS/CPU sampling and UI summaries are implemented
+locally; actual overhead measurements and whole-group stop acceptance remain
+pending. See [driver and resources](driver-and-resources.md).
+The production worker also has a [private TCP namespace](private-network.md):
+internal guest ports are independent of host publication, normal completion
+allows bounded forwarding drain, and explicit stop revokes only its own sockets.
+The common stack controller derives private peer authority from durable membership,
+reserves all required slots before bind and starts dependencies before dependents.
+It cancels newly added workers on startup failure while preserving existing ones;
+an explicit stop of an existing dependency still reaches it during rollback.
+Group failure does not fabricate individual guest errors. Reverse group stop
+awaits each member's observed death and committed terminal state. See
+[stack lifecycle](stacks.md) and the private transport contract.
 
 Sources: Android's [service manifest](https://developer.android.com/guide/topics/manifest/service-element),
 [process/thread model](https://developer.android.com/guide/components/processes-and-threads)

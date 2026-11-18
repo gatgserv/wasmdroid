@@ -1,0 +1,32 @@
+<resources>
+    <string name="group_edit">Edit definition</string>
+    <string name="group_edit_title">Edit group: %1$s</string>
+    <string name="group_edit_preserves">Review changes before applying. Applying preserves existing data and does not start services.</string>
+    <string name="group_edit_stop_first">Stop every group service and finish data operations before applying changes.</string>
+    <string name="group_edit_revision">Based on revision %1$s</string>
+    <string name="group_edit_review">Review changes</string>
+    <string name="group_edit_changes">Changes to apply</string>
+    <string name="group_edit_change">%1$s: %2$s</string>
+    <string name="group_edit_keep">Keep</string>
+    <string name="group_edit_configure">Update configuration</string>
+    <string name="group_edit_replace">Replace service; preserve data</string>
+    <string name="group_edit_add">Add service</string>
+    <string name="group_edit_remove">Remove service; preserve data</string>
+    <string name="group_edit_retained">Protected recovery datasets: %1$d</string>
+    <string name="group_edit_apply">Apply reviewed changes</string>
+    <string name="group_edit_applied">Group definition updated. Start services when you are ready.</string>
+    <string name="group_edit_reload">Reload current definition</string>
+    <string name="group_edit_discard">Discard draft</string>
+    <string name="group_edit_discard_title">Discard unsaved changes?</string>
+    <string name="group_edit_discard_body">The private draft will be replaced. Existing services and data will not be changed.</string>
+    <string name="group_edit_unavailable">The engine connection is unavailable. Reconnect, then reload the definition.</string>
+    <string name="group_edit_changed">The group, a service or a package changed. Reload and review again.</string>
+    <string name="group_edit_busy">Stop group services and finish active operations, then review again.</string>
+    <string name="group_edit_unsupported">This definition contains an unsupported setting. Review the document.</string>
+    <string name="group_edit_invalid">The definition or a required package is unavailable. Check the document and listed packages, then review again.</string>
+    <string name="group_edit_failed">The operation failed. Existing data is preserved. Reload the current definition before retrying.</string>
+    <string name="group_packages_missing">Required packages are missing</string>
+    <string name="group_packages_review_again">Download public packages or import the exact local packages, then review the definition again. Downloading does not create or start services.</string>
+    <string name="group_package_download">Download package</string>
+    <string name="group_package_import_required">Import this exact local package from Store before reviewing again.</string>
+</resources>

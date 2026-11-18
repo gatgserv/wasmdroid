@@ -19,6 +19,8 @@ use wasmer_wasix::{
 pub(crate) struct TrackedTasks {
     inner: TokioTaskManager,
     active: Arc<AtomicUsize>,
+    guests: Arc<AtomicUsize>,
+    accepting: Arc<std::sync::atomic::AtomicBool>,
     #[cfg(unix)]
     interrupts: Arc<Interrupts>,
 }
@@ -111,6 +113,8 @@ impl TrackedTasks {
         Self {
             inner: TokioTaskManager::new(handle),
             active: Arc::new(AtomicUsize::new(0)),
+            guests: Arc::new(AtomicUsize::new(0)),
+            accepting: Arc::new(std::sync::atomic::AtomicBool::new(true)),
             #[cfg(unix)]
             interrupts: Arc::new(Interrupts::default()),
         }
@@ -121,6 +125,12 @@ impl TrackedTasks {
     }
     pub fn active(&self) -> usize {
         self.active.load(Ordering::Acquire)
+    }
+    pub fn active_guests(&self) -> usize {
+        self.guests.load(Ordering::Acquire)
+    }
+    pub fn fence_new_guests(&self) {
+        self.accepting.store(false, Ordering::Release);
     }
 
     /// Best effort: callers must retry until actual callback activity reaches
@@ -190,12 +200,34 @@ impl VirtualTaskManager for TrackedTasks {
         }))
     }
     fn task_wasm(&self, mut task: TaskWasm) -> Result<(), WasiThreadError> {
+        if !self.accepting.load(Ordering::Acquire) {
+            return Err(WasiThreadError::Unsupported);
+        }
         let activity = self.activity();
+        self.guests.fetch_add(1, Ordering::AcqRel);
+        let guest = Activity(self.guests.clone());
+        let accepting = self.accepting.clone();
         let run = task.callbacks.run;
         #[cfg(unix)]
         let registry = self.interrupts.clone();
         task.callbacks.run = Box::new(move |properties| {
             let _activity = activity;
+            let _guest = guest;
+            if !accepting.load(Ordering::Acquire) {
+                properties
+                    .ctx
+                    .data(&properties.store)
+                    .process
+                    .signal_process(wasmer_wasix_types::wasi::Signal::Sigkill);
+                properties
+                    .ctx
+                    .data(&properties.store)
+                    .thread
+                    .set_status_finished(Err(
+                        wasmer::RuntimeError::new("Service is stopping").into()
+                    ));
+                return;
+            }
             #[cfg(unix)]
             let _signal_mask = match SignalMaskGuard::enter() {
                 Ok(guard) => guard,

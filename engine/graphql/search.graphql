@@ -6,7 +6,9 @@ query SearchPackages($query: String!, $after: String, $first: Int!) {
         __typename
         ... on PackageVersion {
           version
+          createdAt
           description
+          distribution(version: V3) { webcVersion }
           package { namespace packageName private }
         }
       }
