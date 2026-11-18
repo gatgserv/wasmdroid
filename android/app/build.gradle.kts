@@ -57,11 +57,19 @@ android {
         applicationId = "ro.atgserv.wasmdroid"
         minSdk = 28
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
         buildConfigField("boolean", "RUNTIME_ENABLED", runtimeEnabled.get())
         ndk { abiFilters += listOf("arm64-v8a", "x86_64").intersect(nativeAbis.get().split(',').toSet()) }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            optimization {
+                enable = true
+            }
+            proguardFiles("proguard-rules.pro")
+        }
     }
     buildFeatures { compose = true; buildConfig = true }
     androidResources {
