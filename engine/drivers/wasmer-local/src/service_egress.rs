@@ -569,10 +569,10 @@ impl Work {
         }
     }
     fn answer(&self, value: virtual_net::Result<Vec<IpAddr>>) {
-        if let WorkKind::Resolve { answer } = &self.kind {
-            if let Some(answer) = answer.lock().unwrap_or_else(|p| p.into_inner()).take() {
-                let _ = answer.send(value);
-            }
+        if let WorkKind::Resolve { answer } = &self.kind
+            && let Some(answer) = answer.lock().unwrap_or_else(|p| p.into_inner()).take()
+        {
+            let _ = answer.send(value);
         }
     }
 }

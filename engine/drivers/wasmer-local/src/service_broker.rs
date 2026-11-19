@@ -559,13 +559,12 @@ struct Endpoint {
 impl Drop for Endpoint {
     fn drop(&mut self) {
         use std::os::unix::fs::{FileTypeExt, MetadataExt};
-        if let Ok(metadata) = std::fs::symlink_metadata(&self.path) {
-            if metadata.dev() == self.device
-                && metadata.ino() == self.inode
-                && metadata.file_type().is_socket()
-            {
-                let _ = std::fs::remove_file(&self.path);
-            }
+        if let Ok(metadata) = std::fs::symlink_metadata(&self.path)
+            && metadata.dev() == self.device
+            && metadata.ino() == self.inode
+            && metadata.file_type().is_socket()
+        {
+            let _ = std::fs::remove_file(&self.path);
         }
     }
 }

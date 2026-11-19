@@ -210,7 +210,7 @@ fn cbor_item(
                 children += 1;
             }
             *cursor += 1;
-            ensure!(major != 5 || children % 2 == 0, "invalid CBOR map");
+            ensure!(major != 5 || children.is_multiple_of(2), "invalid CBOR map");
         }
         _ => anyhow::bail!("invalid CBOR item"),
     }

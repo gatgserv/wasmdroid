@@ -25,8 +25,10 @@ fn webc(wasm: &[u8], bad_signature: bool) -> Vec<u8> {
             write::{FileEntry, Writer},
         },
     };
-    let mut manifest = Manifest::default();
-    manifest.entrypoint = Some("main".into());
+    let mut manifest = Manifest {
+        entrypoint: Some("main".into()),
+        ..Default::default()
+    };
     let signed_bytes = if bad_signature {
         b"different code".as_slice()
     } else {
@@ -88,9 +90,14 @@ fn actual_raw_wasm_and_webc_use_the_same_verified_offline_execution_loader() {
             .to_owned();
         let artifact = import.commit(&token).unwrap();
         let store = ContentStore::open(session.root().join("store")).unwrap();
-        let result =
-            crate::webc_execution::run_offline(&store, &artifact, &[artifact.clone()], "main", &[])
-                .unwrap();
+        let result = crate::webc_execution::run_offline(
+            &store,
+            &artifact,
+            std::slice::from_ref(&artifact),
+            "main",
+            &[],
+        )
+        .unwrap();
         assert_eq!(result.exit_code, 0);
         assert_eq!(result.stdout, "Hello from WasmDroid!\n");
     }

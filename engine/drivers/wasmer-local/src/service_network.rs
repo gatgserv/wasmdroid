@@ -981,10 +981,10 @@ impl VirtualSocket for Socket {
             .map(|address| self.display_address(address))
     }
     fn status(&self) -> virtual_net::Result<SocketStatus> {
-        if let Some(opening) = &self.opening {
-            if opening.status() != SocketStatus::Opened {
-                return Ok(opening.status());
-            }
+        if let Some(opening) = &self.opening
+            && opening.status() != SocketStatus::Opened
+        {
+            return Ok(opening.status());
         }
         self.call(|socket| socket.status()).or_else(|error| {
             if error == NetworkError::NotConnected {

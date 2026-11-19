@@ -71,10 +71,10 @@ impl SelectedNetwork for Selected {
     }
     fn current(&self) -> bool {
         let call = self.calls.fetch_add(1, Ordering::SeqCst) + 1;
-        if call == 3 {
-            if let Some(block) = &self.block {
-                block.wait();
-            }
+        if call == 3
+            && let Some(block) = &self.block
+        {
+            block.wait();
         }
         !self.lost.is_revoked() && call != self.fail_at
     }

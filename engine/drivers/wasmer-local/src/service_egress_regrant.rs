@@ -275,10 +275,8 @@ impl Control {
         }
         // Uncertain cleanup is sticky for this driver; it cannot admit another
         // candidate merely because an observer/owner task ended unexpectedly.
-        if !uncertain {
-            if let Some(admission) = self.admission.upgrade() {
-                admission.release(self);
-            }
+        if !uncertain && let Some(admission) = self.admission.upgrade() {
+            admission.release(self);
         }
         self.changed.notify_waiters();
     }
