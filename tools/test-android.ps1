@@ -2,17 +2,29 @@ param(
     [Parameter(Mandatory = $true)][ValidatePattern('^[a-zA-Z0-9_.:-]+$')][string]$Serial,
     [string]$Abis = 'x86_64',
     [ValidateSet('true', 'false')][string]$RuntimeEnabled = 'true',
+    [ValidateSet('debug', 'release')][string]$RustProfile = 'debug',
+    [ValidateSet('cranelift', 'singlepass')][string]$Compiler = 'cranelift',
     [ValidateRange(30, 600)][int]$TimeoutSeconds = 180,
-    [switch]$SkipBuild
+    [ValidatePattern('^[a-zA-Z0-9_.$,]+$')][string]$TestClass = 'dev.wasmdroid.app.EngineBridgeTest',
+    [switch]$SkipBuild,
+    [switch]$NotesLive
 )
 $ErrorActionPreference = 'Stop'
+$appPackage='ro.atgserv.wasmdroid'
+$notesClass='dev.wasmdroid.app.NotesRecipeAcceptanceTest'
+if($NotesLive -and $TestClass -ne $notesClass){
+    throw '-NotesLive is scoped to the explicit NotesRecipeAcceptanceTest class.'
+}
+if($TestClass -eq $notesClass -and -not $NotesLive){
+    throw 'The Notes acceptance downloads a public package and creates test-owned applications; select -NotesLive explicitly.'
+}
 $repo = Split-Path -Parent $PSScriptRoot
 $sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } elseif ($env:ANDROID_SDK_ROOT) { $env:ANDROID_SDK_ROOT } else { Join-Path $env:LOCALAPPDATA 'Android\Sdk' }
 $adb = Join-Path $sdk 'platform-tools\adb.exe'
 Push-Location $repo
 try {
     if (-not $SkipBuild) {
-        & ./android/gradlew.bat -p android :app:assembleDebug :app:assembleDebugAndroidTest "-PwasmdroidAbis=$Abis" "-PwasmdroidRuntime=$RuntimeEnabled"
+        & ./android/gradlew.bat -p android :app:assembleDebug :app:assembleDebugAndroidTest "-PwasmdroidAbis=$Abis" "-PwasmdroidRuntime=$RuntimeEnabled" "-PwasmdroidRustProfile=$RustProfile" "-PwasmdroidCompiler=$Compiler"
         if ($LASTEXITCODE -ne 0) { throw 'Android build failed' }
     }
     & $adb -s $Serial get-state
@@ -27,14 +39,17 @@ try {
     $stdout = Join-Path $results "$safeSerial.stdout.txt"
     $stderr = Join-Path $results "$safeSerial.stderr.txt"
     # Direct serial-targeted instrumentation avoids Gradle probing unrelated devices.
-    $runner = Start-Process -FilePath $adb -ArgumentList @('-s', $Serial, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'timeout_msec', '60000', 'dev.wasmdroid.app.test/androidx.test.runner.AndroidJUnitRunner') -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    $instrumentationArguments=@('-s', $Serial, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class', $TestClass, '-e', 'timeout_msec', ($TimeoutSeconds * 1000).ToString())
+    if($NotesLive){$instrumentationArguments+=@('-e','wasmdroidNotesLive','true')}
+    $instrumentationArguments+="${appPackage}.test/androidx.test.runner.AndroidJUnitRunner"
+    $runner = Start-Process -FilePath $adb -ArgumentList $instrumentationArguments -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     # Retain the process handle so Windows PowerShell can retrieve ExitCode after exit.
     $null = $runner.Handle
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while (-not $runner.WaitForExit(1000)) {
         if ((Get-Date) -gt $deadline) {
             $runner.Kill()
-            & $adb -s $Serial shell am force-stop dev.wasmdroid.app
+            & $adb -s $Serial shell am force-stop $appPackage
             throw "WasmDroid instrumentation exceeded $TimeoutSeconds seconds; see $stdout"
         }
     }

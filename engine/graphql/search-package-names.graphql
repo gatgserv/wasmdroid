@@ -1,0 +1,18 @@
+query SearchPackageNames($query: String!, $after: String, $first: Int!) {
+  searchAutocomplete(kind: [PACKAGE], query: $query, after: $after, first: $first) {
+    pageInfo { hasNextPage endCursor }
+    edges {
+      node {
+        __typename
+        ... on PackageVersion {
+          version
+          createdAt
+          description
+          yankedAt
+          distribution(version: V3) { webcVersion webcManifest }
+          package { namespace packageName private }
+        }
+      }
+    }
+  }
+}

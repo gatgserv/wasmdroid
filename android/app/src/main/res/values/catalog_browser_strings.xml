@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="browser_data_title">Browser data</string>
+    <string name="browser_data_preserved">Web data is kept by default, including after the application is removed.</string>
+    <string name="browser_data_available">Available</string>
+    <string name="browser_data_loading">Checking browser status</string>
+    <string name="browser_data_loading_detail">Reading the current profile and active web view status.</string>
+    <string name="browser_data_available_detail">Clear cookies, cached files and website storage for this application only.</string>
+    <string name="browser_data_in_use">In use</string>
+    <string name="browser_data_in_use_detail">Close all embedded web views for this application before clearing its data.</string>
+    <string name="browser_data_clearing">Clearing</string>
+    <string name="browser_data_clearing_detail">Clearing web data… Wait for completion before opening the web view. Leaving this screen does not cancel the operation.</string>
+    <string name="browser_data_interrupted">Interrupted</string>
+    <string name="browser_data_interrupted_detail">The previous clearing operation did not finish with a confirmed result. Web data may be partly cleared. You can retry.</string>
+    <string name="browser_data_changed">Status changed</string>
+    <string name="browser_data_changed_detail">The browser data status changed. Reload the current status before clearing.</string>
+    <string name="browser_data_unsupported">Unsupported provider</string>
+    <string name="browser_data_unsupported_detail">This WebView provider cannot clear data for one application. Other profiles will not be cleared.</string>
+    <string name="browser_data_unavailable">Status unavailable</string>
+    <string name="browser_data_unavailable_detail">Connect to the application engine and reload the browser data status.</string>
+    <string name="browser_data_failed">Clearing failed</string>
+    <string name="browser_data_failed_detail">A completed clearing operation could not be confirmed. Review the current status before retrying.</string>
+    <string name="browser_data_clear">Clear web data</string>
+    <string name="browser_data_clear_named">Clear web data for %1$s</string>
+    <string name="browser_data_retry">Retry clearing web data</string>
+    <string name="browser_data_reload">Reload browser status</string>
+    <string name="browser_data_cleared">Web data clearing was acknowledged for this application. Datasets and other applications were kept.</string>
+    <string name="browser_data_scope">This affects embedded browser data only. App datasets and external browser data are kept.</string>
+    <string name="browser_data_origin_note">A different local address after restart can change which website storage is visible. Complete browser network isolation is unavailable.</string>
+    <string name="browser_data_confirm_title">Clear web data?</string>
+    <string name="browser_data_confirm_body">Clear cookies, cached files and website storage for %1$s? This may sign you out of its website. App datasets, other applications and external browser data are kept.</string>
+    <string name="browser_data_confirm_clear">Clear this web data</string>
+    <string name="browser_data_keep">Keep web data</string>
+</resources>

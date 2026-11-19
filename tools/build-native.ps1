@@ -1,6 +1,8 @@
 param(
     [string]$Abis = 'arm64-v8a',
     [ValidateSet('true', 'false')][string]$RuntimeEnabled = 'false',
+    [ValidateSet('debug', 'release')][string]$RustProfile = 'debug',
+    [ValidateSet('cranelift', 'singlepass')][string]$Compiler = 'cranelift',
     [string]$NdkVersion = '28.2.13676358'
 )
 $ErrorActionPreference = 'Stop'
@@ -23,11 +25,11 @@ try {
     foreach ($abi in $Abis.Split(',')) {
         if (-not $targets.ContainsKey($abi)) { throw "Unsupported ABI: $abi" }
         $target = $targets[$abi]
-        $compiler = Join-Path $ndk "${target}28-clang.cmd"
+        $androidClang = Join-Path $ndk "${target}28-clang.cmd"
         $targetKey = $target.Replace('-', '_')
         $variables = @{
-            "CARGO_TARGET_$($targetKey.ToUpper())_LINKER" = $compiler
-            "CC_$targetKey" = $compiler
+            "CARGO_TARGET_$($targetKey.ToUpper())_LINKER" = $androidClang
+            "CC_$targetKey" = $androidClang
             "AR_$targetKey" = (Join-Path $ndk 'llvm-ar.exe')
         }
         $previous = @{}
@@ -37,13 +39,17 @@ try {
                 [Environment]::SetEnvironmentVariable($key, $variables[$key], 'Process')
             }
             $arguments = @('build', '--locked', '-p', 'wasmdroid-ffi', '--target', $target)
-            if ($RuntimeEnabled -eq 'true') { $arguments += @('--features', 'wasmer') }
+            if ($RustProfile -eq 'release') { $arguments += '--release' }
+            if ($RuntimeEnabled -eq 'true') {
+                $runtimeFeature = if ($Compiler -eq 'singlepass') { 'singlepass' } else { 'wasmer' }
+                $arguments += @('--features', $runtimeFeature)
+            }
             & cargo @arguments
             if ($LASTEXITCODE -ne 0) { throw "Rust build failed for $target" }
         } finally {
             foreach ($key in $previous.Keys) { [Environment]::SetEnvironmentVariable($key, $previous[$key], 'Process') }
         }
-        $library = Join-Path $repo "target\$target\debug\libwasmdroid_ffi.so"
+        $library = Join-Path $repo "target\$target\$RustProfile\libwasmdroid_ffi.so"
         $jni = Join-Path $output "jniLibs\$abi"
         New-Item -ItemType Directory -Path $jni -Force | Out-Null
         Copy-Item -LiteralPath $library -Destination (Join-Path $jni 'libwasmdroid_ffi.so')

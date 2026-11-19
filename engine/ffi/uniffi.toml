@@ -1,3 +1,4 @@
 [crates.wasmdroid_ffi.bindings.kotlin]
 package_name = "dev.wasmdroid.engine"
 cdylib_name = "wasmdroid_ffi"
+android = true

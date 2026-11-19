@@ -1,0 +1,20 @@
+<resources>
+    <string name="automation_title">Automatic start</string>
+    <string name="automation_after_restart">Start after device restart</string>
+    <string name="automation_on">On</string>
+    <string name="automation_off">Off</string>
+    <string name="automation_after_exit">Restart after exit</string>
+    <string name="automation_never">Never</string>
+    <string name="automation_on_failure">On failure</string>
+    <string name="automation_always">Always</string>
+    <string name="automation_boot_hint">Device-restart startup is separate from the exit policy. Android may prevent automatic startup.</string>
+    <string name="automation_manual_stop_hint">Manual Stop prevents automatic restarts after exit. The device-restart setting is separate.</string>
+    <string name="automation_save_hint">Saving changes the configuration only. Start the application separately to enable its exit policy.</string>
+    <string name="automation_group_unavailable">Automatic start is unavailable for grouped applications. Configure supported options in the group instead.</string>
+    <string name="automation_error">Choose Never, On failure or Always, and turn device-restart startup on or off.</string>
+    <string name="automation_edit_stop">Stop this app and finish data operations to change these settings.</string>
+    <string name="automation_edit_changed">This app has changed. Reload its settings to continue.</string>
+    <string name="automation_edit_failed">The settings could not be loaded or saved. Reload to check the current settings.</string>
+    <string name="automation_edit_unavailable">Automatic start settings are unavailable.</string>
+    <string name="automation_edit_save">Save</string>
+</resources>

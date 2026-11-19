@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   engine:
     strategy:
@@ -33,14 +37,24 @@ jobs:
                   assert not any(key.startswith('wasmer') for key in manifest.get(section, {})), path
 
   runtime-probe:
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        include:
+          - compiler: cranelift
+            ffi_feature: wasmer
+          - compiler: singlepass
+            ffi_feature: singlepass
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.95.0
-      - run: cargo test --locked -p wasmdroid-wasmer-local
+      - run: cargo test --locked -p wasmdroid-wasmer-local --no-default-features --features '${{ matrix.compiler }}'
+      - run: cargo clippy --locked -p wasmdroid-wasmer-local -p wasmdroid-ffi --no-default-features --features 'wasmdroid-wasmer-local/${{ matrix.compiler }},wasmdroid-ffi/${{ matrix.ffi_feature }}' --all-targets -- -D warnings
 
   android:
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -50,8 +64,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.95.0
         with:
           targets: aarch64-linux-android, x86_64-linux-android
-      - uses: android-actions/setup-android@v3
-      - run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+        timeout-minutes: 10
+        with:
+          cmdline-tools-version: '15859902'
+          packages: platform-tools
+      - run: sdkmanager "platforms;android-37.0" "build-tools;36.0.0" "ndk;28.2.13676358"
       - run: ./gradlew.bat :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug '-PwasmdroidAbis=arm64-v8a,x86_64' -PwasmdroidRuntime=true
         working-directory: android
 

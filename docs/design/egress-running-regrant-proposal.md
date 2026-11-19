@@ -1,0 +1,40 @@
+# Running outbound capture / regrant proposal
+
+Proposal,2026-11-17. Current source3155b46 supports first startup/restart only.
+This note does not implement handover or claim Android acceptance. Matching
+checks and limitations are in [the startup checkpoint](../verification/2026-11-17-outbound-startup-permissions.md).
+
+## Actual gap
+
+EgressScope.capture/validate_native currently require Created/Exited plus exact desired Starting authority. READY commits Running and advances the native record/authority. Native issuance therefore intentionally cannot construct a valid AndroidSelectedNetwork for the surviving running worker. ServiceNetwork can replace a manager only after actual old drain and a strictly higher grant; it lacks a native running issuance/pending admission contract and a status facade. WorkerEgressHost currently issues one capture for its lifetime.
+
+## Proposed minimal native API
+
+- `ServiceDriver::egress_status() -> Result<EgressAttachmentStatus>`: immutable metadata-only phase plus current/pending grant and network epochs, native revision and actual EgressStatus receipt. Distinguish Absent, Preparing, Active, Draining, Closed, Uncertain and permanently Stopped. No manager while initial start is pending is Preparing, never an invented Closed. `tcp_active==0` alone is not drain authority.
+- `ServiceDriver::reserve_running_egress(network_epoch:u64) -> Result<EgressRegrantTicket>`: opaque one-use ticket, no serde/public constructor/Clone; native allocates a strictly increasing grant epoch (failed/cancelled issues consume it). At most one pending ticket. Ticket read-only scope and actual effective Internet/LAN booleans let the private FFI build the selected capture and neutral policy without caller permission fields.
+- `ServiceDriver::install_running_egress(ticket:EgressRegrantTicket, selected:Arc<dyn SelectedNetwork>, policy:Arc<dyn DestinationPolicy>, limits:EgressLimits) -> Result<EgressReceipt>`: consumes once; final actual manager/receipt publication follows the ticket checks below. Existing legacy no-cap APIs stay closed. No public request can assign actual identity/grant/spec/permission authority.
+- A private cancellation/terminal query for that exact pending grant must preserve retained operation ownership. An observer cancelling is not permission to free its ticket/capture. Late old cancellation cannot affect a newer grant.
+
+Native proof should gain a sealed phase (Starting or Running), not weaken the existing startup validator to accept either indiscriminately. Running requires actual Driver execution, same immutable Driver id/generation, native Running record, exact current installed spec/version, desired_run=true, matching generation and RunOutcome::Running. Bind the original private application/birth identity too, so caller strings or ID reuse never select an application. Native Stop's existing permanent gate is independent of manager revocation and always wins. No capture for a changed spec, different owner/session/app identity, inactive generation or removed/terminal instance.
+
+Root READY ACK can arrive after worker Native start returns; do not misclassify this transient as permission to issue a running grant. Wait for actual committed Running authority (bounded retained worker task or explicit parent-after-commit wakeup), while still observing Stop/death. Never rearm Starting authority as Running.
+
+## Ordering and ownership
+
+1. Actual OS observation loses/changes the current context: irrevocably invalidate its Java gate and Weak native revoker immediately. Retain its capture until actual manager receipt is Closed and not Uncertain. Normal closed-with-error may permit a fresh grant while preserving its failure fact; a returned error/timeout/zero clients cannot stand in for closure.
+2. Coalesce further callbacks into one latest-observation marker. Do not create a second candidate or queue a thread per network event. While old drain is pending, no actual new provider/capture is admitted.
+3. After real old drain, obtain a fresh actual app-default Network/context capture first, honoring VPN. Then reserve native running ticket/epoch; build selected adapter/policy from that capture and actual native flags; install its Weak revoker BEFORE native admission. This is continuation of stored consent, not conversion of catalog/caller fields into grants.
+4. Recheck actual native record/spec/authority, permanent Stop gate, exact pending ticket and exact prior manager identity after external preparation and immediately before namespace CAS. Recheck selected current outside every driver/admission/namespace mutex. Prior manager must still be the exact drained one, not just equal ID/epoch text. Old manager/native epoch/capture cannot revoke or complete a new one.
+5. New manager must inherit a separate permanent-stop observation, alongside its own reversible/current-capture cancellation. Otherwise Stop racing publication could miss the new manager. Do not reuse a permanent gate as the manager's interactive Ctrl-C gate. Current-only interrupt permits a later fresh grant after drain; Stop/kill/drop forbid it for this generation.
+6. Failed admission before any native manager publication has explicit no-admission proof. If a candidate manager/owner task exists, retain candidate capture and operation until its actual Closed receipt; arbitrary exception or observer cancellation is not proof. A manager may be constructed empty before CAS, but its owner still must terminate on failed publication; no guest command may reach it before the successful slot CAS.
+7. Never await provider/drain under Driver state, admission, namespace or callback-gate locks. Capture runtime Handle, EngineConnection/ownership, installed spec and manager reference under brief control access; perform DB connection/read and injected work outside long locks, then final fenced publication. Declare one lock order for the few joint state/receipt operations. Session ownership/provider closures and actual worker death gates are preserved.
+
+## Java bound: one current plus one pending
+
+Worker-owned controller states: Current -> Draining -> Preparing -> Current; Uncertain blocks until actual worker death/recovery. Keep at most one retained current Capture and one pending Capture; latest-observation metadata is a replacement marker, not an extra capability. Loss while Preparing invalidates that candidate; retain it until its exact native admission/cleanup terminal result, then recapture the newest actual context. One private retained background operation runs native calls; Main keeps termination responsive. Duplicate callbacks, UI observers, timeouts and late FFI results cannot schedule extra grants or free work. Existing common-owner Job keeps foreground/slot lifetime; this does not create another worker or invent a new FGS.
+
+## Ownership / next definitions
+
+Resource lane: EgressScope phase/proof, native monotonic ticket/driver admission/status, ServiceNetwork exact prior-manager CAS hook (transfer from catalog lane), provider/receipt ownership tests. Root: private FFI ticket/status facade, WorkerEgressHost bounded regrant controller and READY/death/Stop integration, UI status only after English scheme. Catalog lane: independent policy/context review and namespace/policy regressions. No new Wasmer imports outside driver.
+
+Focused definitions: Running+same generation desired authority accepted only after READY; Starting/wrong generation/spec/identity/stale revision refused; held real TCP/bind/DNS blocks regrant until actual drain; closed-with-error versus uncertain; native monotonic failed-ticket epochs; Stop before reserve/during callback/before CAS/after CAS; old capture loss cannot revoke new; one pending under callback bursts; cancellation retains actual operation; initial manager receipt never forged while start pending; new context policy still separates Internet/LAN and reserved private names. Real supported-runtime/Android Wi-Fi/cellular/VPN/handover/stop/death acceptance remains separate.

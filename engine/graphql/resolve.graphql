@@ -1,0 +1,15 @@
+query ResolvePackage($name: String!, $version: String) {
+  getPackageVersion(name: $name, version: $version) {
+    version
+    license
+    yankedAt
+    package { namespace packageName private }
+    distribution(version: V3) {
+      webcDownloadUrl
+      webcSha256Hash
+      webcSize
+      webcVersion
+      webcManifest
+    }
+  }
+}

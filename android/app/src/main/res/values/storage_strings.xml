@@ -1,0 +1,24 @@
+<resources>
+    <string name="storage_title">Storage</string>
+    <string name="storage_scope">A snapshot of downloaded files, startup cache, saved data and logs.</string>
+    <string name="storage_idle">Refresh to count stored files.</string>
+    <string name="storage_loading">Counting stored files…</string>
+    <string name="storage_failed">Storage could not be read. Refresh to try again.</string>
+    <string name="storage_disconnected">Storage is unavailable. Connect to refresh.</string>
+    <string name="storage_counted">Snapshot ready</string>
+    <string name="storage_partial">Some storage could not be counted</string>
+    <string name="storage_artifacts">Downloaded files</string>
+    <string name="storage_compiled_cache">Startup cache</string>
+    <string name="storage_volumes">Saved data</string>
+    <string name="storage_logs">Logs</string>
+    <string name="storage_value_unavailable">Unavailable</string>
+    <string name="storage_row_partial">Partial count</string>
+    <string name="storage_row_unavailable">This folder could not be counted.</string>
+    <string name="storage_observed_sum">Total counted</string>
+    <string name="storage_sum_partial">Some files could not be counted. Values may change while apps are running.</string>
+    <string name="storage_available">Available space</string>
+    <string name="storage_available_detail">Free space where WasmDroid saves files. Other apps can also use it.</string>
+    <string name="storage_observation_detail">Sizes can change while apps are running. Counts may differ from Android Settings.</string>
+    <string name="storage_exclusions">Website data and other app files are not included.</string>
+    <string name="storage_refresh">Refresh storage</string>
+</resources>

@@ -1,0 +1,177 @@
+Tested application code: 4b0c9fd40ee39b40761e7453caf8d2b8841f4791
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.EngineBridgeTest:
+INSTRUMENTATION_STATUS: test=builtInWasiModuleExecutesWhenRuntimeIsIncluded
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=builtInWasiModuleExecutesWhenRuntimeIsIncluded
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=invalidCatalogCrossesErrorBoundary
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=invalidCatalogCrossesErrorBoundary
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=packagedNativeLibraryAnswers
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.EngineBridgeTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=packagedNativeLibraryAnswers
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.CoreBenchmarkTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.CoreBenchmarkTest:
+INSTRUMENTATION_STATUS: test=integerWorkloadReturnsVerifiedChecksumAndRawTimings
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=WASMDROID_CORE_BENCHMARK_JSON={"schema_version":1,"backend":"cranelift","iterations_per_sample":1000000,"cold_compile_us":5127,"instantiate_us":727,"execution_us":[3394,3362,3537,3401,3318],"checksum":507449365,"process_rss_bytes":132177920,"process_peak_rss_bytes":132177920}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.CoreBenchmarkTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=integerWorkloadReturnsVerifiedChecksumAndRawTimings
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.RuntimeBenchmarkTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.RuntimeBenchmarkTest:
+INSTRUMENTATION_STATUS: test=measureVerifiedPythonColdAndSameProcessWarmRuns
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=benchmark_registry_setup_excluded_from_timings
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=benchmark_cold_compile
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=benchmark_warm_start
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=benchmark_warm_start
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=benchmark_warm_start
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=WASMDROID_BENCHMARK_JSON={"schema_version":1,"backend":"cranelift","reference":"wasmer.io/python/python@3.13.20","digest":"sha256:a9fa8202f1bf6a4eca8d31ee5f2b1970c8f45af5c5520cc954d28a133333d8e7","graph_prepare_us":1069645,"cold_compile_us":34589410,"cold_start_to_exit_us":35184192,"warm_cache_lookup_us":101,"warm_start_to_exit_us":[606322,242222,606122],"outputs":[{"exit_code":0,"stdout":"WASMDROID_BENCHMARK_OK 4999950000 198314134\n","stderr":"","elapsed_ms":594,"stdout_truncated":false,"stderr_truncated":false},{"exit_code":0,"stdout":"WASMDROID_BENCHMARK_OK 4999950000 178756945\n","stderr":"","elapsed_ms":606,"stdout_truncated":false,"stderr_truncated":false},{"exit_code":0,"stdout":"WASMDROID_BENCHMARK_OK 4999950000 63192246\n","stderr":"","elapsed_ms":242,"stdout_truncated":false,"stderr_truncated":false},{"exit_code":0,"stdout":"WASMDROID_BENCHMARK_OK 4999950000 178752257\n","stderr":"","elapsed_ms":606,"stdout_truncated":false,"stderr_truncated":false}],"process_rss_bytes":484073472,"process_peak_rss_bytes":601276416}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.RuntimeBenchmarkTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=measureVerifiedPythonColdAndSameProcessWarmRuns
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.RegistryProbeTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.RegistryProbeTest:
+INSTRUMENTATION_STATUS: test=downloadsVerifiedWebcAndExecutesPythonInGuestFilesystem
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.RegistryProbeTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=downloadsVerifiedWebcAndExecutesPythonInGuestFilesystem
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.HttpProbeTest
+INSTRUMENTATION_STATUS: current=7
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+dev.wasmdroid.app.HttpProbeTest:
+INSTRUMENTATION_STATUS: test=registryServerRespondsThroughManagedLoopbackAndStops
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=WasmDroid HTTP phase: Resolving:wasmer.io/wasmer/static-web-server@2.44.0
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=WasmDroid HTTP phase: parsing_verified_webc
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=WasmDroid HTTP phase: compiling_and_starting_http
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=WasmDroid HTTP phase: http_port_reserved
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP response: status=200
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=Verified HTTP body marker: WASMDROID_HTTP_OK
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP response: status=200
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=Verified HTTP body marker: WASMDROID_HTTP_OK
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=HTTP stop: exit=27, forced=true, activeTasks=0, elapsed=7279 ms, stderr=
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.HttpProbeTest
+INSTRUMENTATION_STATUS: current=7
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=registryServerRespondsThroughManagedLoopbackAndStops
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.HttpProbeTest
+INSTRUMENTATION_STATUS: current=8
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=Two guest servers used private port 8080 and distinct host ports/document roots; second remained reachable after first stopped
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=dev.wasmdroid.app.HttpProbeTest
+INSTRUMENTATION_STATUS: current=8
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=simultaneousGuestPortsAndFilesStayIsolatedWhenOneStops
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 98.442
+
+OK (8 tests)
+
+
+INSTRUMENTATION_CODE: -1

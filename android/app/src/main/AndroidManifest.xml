@@ -1,8 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- The finite built-in probe needs no network, storage or background permissions. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Registry uses HTTPS; guest network access is controlled separately by the driver. -->
+    <!-- Android 13+ reads localeConfig. Activities and services enforce English on earlier versions. -->
     <application android:label="WasmDroid" android:allowBackup="false" android:supportsRtl="true"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:localeConfig="@xml/locales_config"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar"
+        tools:ignore="UnusedAttribute">
+        <service android:name=".engine.EngineService" android:exported="false"
+            android:stopWithTask="false" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Runs user-started local WebAssembly applications and web servers until the user stops them" />
+        </service>
+        <!-- Same app UID; guest permissions are still enforced by Rust virtual
+             filesystem/network capabilities. These are not isolatedProcess UIDs. -->
+        <service android:name=".engine.RuntimeSlot0" android:exported="false" android:process=":runtime0" />
+        <service android:name=".engine.RuntimeSlot1" android:exported="false" android:process=":runtime1" />
+        <service android:name=".engine.RuntimeSlot2" android:exported="false" android:process=":runtime2" />
+        <service android:name=".engine.RuntimeSlot3" android:exported="false" android:process=":runtime3" />
+        <service android:name=".engine.RuntimeSlot4" android:exported="false" android:process=":runtime4" />
+        <service android:name=".engine.RuntimeSlot5" android:exported="false" android:process=":runtime5" />
+        <service android:name=".engine.RuntimeSlot6" android:exported="false" android:process=":runtime6" />
+        <service android:name=".engine.RuntimeSlot7" android:exported="false" android:process=":runtime7" />
+        <receiver android:name=".engine.EngineBootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".shortcuts.ShortcutWidgetProvider" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/shortcuts_widget_info" />
+        </receiver>
+        <activity android:name=".shortcuts.ShortcutConfigurationActivity" android:exported="true"
+            android:excludeFromRecents="true" android:label="@string/shortcuts_app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".shortcuts.ShortcutActionActivity" android:exported="false"
+            android:excludeFromRecents="true" android:label="@string/shortcuts_app_name" />
+        <service android:name=".shortcuts.ShortcutTileService" android:exported="true"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:icon="@android:drawable/ic_media_play" android:label="@string/shortcuts_app_name">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE" android:value="true" />
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="true" />
+        </service>
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

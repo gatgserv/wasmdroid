@@ -1,0 +1,22 @@
+<resources>
+    <string name="network_permission_title">Network access</string>
+    <string name="network_permission_intro">New apps start with both permissions off.</string>
+    <string name="network_permission_internet">Internet</string>
+    <string name="network_permission_internet_body">Connect to public Internet services.</string>
+    <string name="network_permission_lan">Private networks (LAN)</string>
+    <string name="network_permission_lan_body">Connect to private-network devices and use the network’s DNS to find them.</string>
+    <string name="network_permission_android_lan">Allow Android local network access before saving this LAN permission.</string>
+    <string name="android_local_network_allow">Allow Android local network access</string>
+    <string name="android_local_network_settings">Open Android app settings</string>
+    <string name="network_permission_route">Uses Android’s current network, including your VPN. DNS queries may be visible to your network provider.</string>
+    <string name="network_permission_browser">Controls this app’s background service. Web pages may still make their own network requests.</string>
+    <string name="network_permission_next_run">Permissions apply when you start this app.</string>
+    <string name="network_permission_save">Save permissions</string>
+    <string name="network_permission_saved">Network permissions saved.</string>
+    <string name="network_permission_stop">Stop this app to change permissions.</string>
+    <string name="network_permission_changed">This app changed. Reload its current settings.</string>
+    <string name="network_permission_unavailable">Network access controls are unavailable. Reconnect and reload.</string>
+    <string name="network_permission_unsupported">Network access controls are unavailable for this app or build.</string>
+    <string name="network_permission_disabled">This app has networking disabled.</string>
+    <string name="network_permission_failed">Permissions could not be saved. Reload and try again.</string>
+</resources>

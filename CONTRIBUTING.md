@@ -9,7 +9,8 @@ Use a separate branch. Do not add Wasmer dependencies/imports outside
 unsupported runtime options must fail explicitly, never silently drop fields.
 Keep secrets, signing keys, private registry links and local SDK paths out of Git.
 
-Run the README Rust checks and the checks appropriate to an Android change.
+Run the [Rust checks](docs/development.md#rust-checks) and the checks appropriate
+for the Android changes.
 Record the revision, commands, target ABI, results and limitations in the PR.
 Do not label emulator results as physical arm64 results or the finite WASI probe
 as the complete Stage 0 acceptance. Do not weaken gates to pass a build.

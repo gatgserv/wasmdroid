@@ -1,0 +1,17 @@
+query SearchPackages($query: String!, $after: String, $first: Int!) {
+  search(query: $query, after: $after, first: $first, packages: {hasCommands: true}) {
+    pageInfo { hasNextPage endCursor }
+    edges {
+      node {
+        __typename
+        ... on PackageVersion {
+          version
+          createdAt
+          description
+          distribution(version: V3) { webcVersion }
+          package { namespace packageName private }
+        }
+      }
+    }
+  }
+}

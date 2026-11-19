@@ -1,0 +1,10 @@
+query PublicPackageVersion($name: String!, $version: String!) {
+  getPackageVersion(name: $name, version: $version) {
+    version
+    createdAt
+    description
+    yankedAt
+    distribution(version: V3) { webcVersion }
+    package { namespace packageName private }
+  }
+}

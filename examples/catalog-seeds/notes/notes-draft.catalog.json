@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "packages": [
+    {
+      "id": "notes-draft",
+      "name": "Local notes (unverified draft)",
+      "description": "First-party static notes in browser-origin storage; unverified WebC recipe, no guest database.",
+      "publisher": "WasmDroid example",
+      "digest": "sha256:1e84109da307837d8160d23a77c36403ab44f7ec0c592b1cfe4a5bd79c968e08",
+      "download_url": "https://cdn.wasmer.io/webcimages/1e84109da307837d8160d23a77c36403ab44f7ec0c592b1cfe4a5bd79c968e08.webc",
+      "android_verified": false,
+      "evidence": null,
+      "recipe": {
+        "type": "stack",
+        "document": "{\"services\":{\"web\":{\"image\":\"wasmer.io/wasmer/static-web-server@2.44.0\",\"command\":[\"webserver\",\"--host\",\"127.0.0.1\",\"--port\",\"8080\",\"--root\",\"/public\",\"--threads-multiplier\",\"1\",\"--max-blocking-threads\",\"2\"],\"ports\":[\"8080\"],\"volumes\":[\"site:/public:ro\"]}},\"volumes\":{\"site\":{}}}",
+        "artifacts": [
+          {
+            "reference": "wasmer.io/wasmer/static-web-server@2.44.0",
+            "digest": "sha256:1e84109da307837d8160d23a77c36403ab44f7ec0c592b1cfe4a5bd79c968e08",
+            "download_url": "https://cdn.wasmer.io/webcimages/1e84109da307837d8160d23a77c36403ab44f7ec0c592b1cfe4a5bd79c968e08.webc"
+          }
+        ],
+        "primary_service": "web",
+        "assets": [
+          {
+            "volume": "site",
+            "path": "index.html",
+            "text": "<!doctype html>\n<!-- SPDX-License-Identifier: Apache-2.0 -->\n<html lang=\"en\">\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'\">\n<title>Local notes example</title>\n<style>\n  :root { color-scheme: light dark; font: 1rem/1.55 system-ui, sans-serif; }\n  body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem; }\n  h1 { line-height: 1.2; }\n  textarea { box-sizing: border-box; width: 100%; min-height: 18rem; padding: .8rem; font: inherit; }\n  button { margin: .8rem .5rem 0 0; padding: .6rem .9rem; font: inherit; }\n  .detail { opacity: .8; }\n</style>\n<main>\n  <h1>Local notes example</h1>\n  <p>A small first-party static page. No account or database is required.</p>\n  <label for=\"note\">Your note</label>\n  <textarea id=\"note\" autocomplete=\"off\" spellcheck=\"true\" placeholder=\"Write a note here\"></textarea>\n  <div><button id=\"save\" type=\"button\">Save in this browser</button><button id=\"export\" type=\"button\">Download a text copy</button></div>\n  <p id=\"status\" role=\"status\" aria-live=\"polite\">Notes stay private to this browser origin.</p>\n  <p class=\"detail\">Browser storage is separate from the service dataset. Clearing web data removes this saved note. If the service address or port changes, the old note may not be visible. Keep a text copy of anything important.</p>\n  <p class=\"detail\">This is an unverified example asset, not an accepted WasmDroid recipe or an Android compatibility claim.</p>\n</main>\n<script>\n  'use strict';\n  const note = document.getElementById('note');\n  const status = document.getElementById('status');\n  const key = 'wasmdroid-first-party-notes-v1';\n  try {\n    note.value = localStorage.getItem(key) || '';\n    if (note.value) status.textContent = 'Saved note loaded from this browser origin.';\n  } catch {\n    status.textContent = 'Browser storage is unavailable. Keep a text copy before leaving.';\n  }\n  document.getElementById('save').addEventListener('click', () => {\n    try {\n      localStorage.setItem(key, note.value);\n      status.textContent = 'Saved in this browser origin.';\n    } catch {\n      status.textContent = 'The note could not be saved. Keep a text copy before leaving.';\n    }\n  });\n  document.getElementById('export').addEventListener('click', () => {\n    const url = URL.createObjectURL(new Blob([note.value], {type: 'text/plain;charset=utf-8'}));\n    const link = document.createElement('a');\n    link.href = url;\n    link.download = 'local-note.txt';\n    link.click();\n    setTimeout(() => URL.revokeObjectURL(url), 1000);\n    status.textContent = 'Text download requested. Availability depends on this browser.';\n  });\n</script>\n</html>\n",
+            "size_bytes": 2831,
+            "digest": "sha256:8d9831a1328f8ce0890b5dc58483d5aabdec23cf85f4ea8ae41f0938e8c2ea25"
+          }
+        ]
+      },
+      "web": {
+        "instance_port": 8080,
+        "path": "/"
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_public_connection">Search needs an Internet connection. Downloaded packages are listed separately below.</string>
+    <string name="search_requested_query">Requested query: “%1$s”</string>
+    <string name="search_results_query">Results for “%1$s”</string>
+    <string name="search_draft_not_submitted">Your edited query has not been submitted. Retry and Load more use the requested query.</string>
+    <string name="search_previous_results">These are previously received results for the query above.</string>
+    <string name="search_stop_waiting">Stop waiting</string>
+    <string name="search_retry">Retry search</string>
+    <string name="search_load_more">Load more</string>
+    <string name="search_registry_order">Registry order</string>
+    <string name="search_newest_release">Newest release</string>
+    <string name="search_released_on">Released %1$s</string>
+    <string name="search_legacy_webc">Published as WebC v%1$d. Local installation requires WebC v3.</string>
+    <string name="search_show_incompatible">Show incompatible releases</string>
+    <string name="search_legacy_webc_filtered">The loaded releases use an unsupported WebC version. Select Show incompatible releases to see them.</string>
+    <string name="registry_tested_on_android">Tested on Android</string>
+    <string name="search_loading_first">Searching the public registry…</string>
+    <string name="search_loading_next">Loading the next page…</string>
+    <string name="search_no_results">No packages matched this query. Try a different name.</string>
+    <string name="search_empty_page">No package releases on this page. Select Load more to continue.</string>
+    <string name="search_failed">Search could not be completed. Check your connection, then retry or enter a different query.</string>
+    <string name="search_invalid_query">Enter a nonempty query of at most 256 characters.</string>
+    <string name="search_invalid_page">The registry returned a page that could not be used. Previously received results are preserved. Retry or start a new search.</string>
+    <string name="search_limit_reached">The search result limit was reached. Refine your query to find more specific packages. Previously received results are preserved.</string>
+    <string name="search_cancelled_observation">Stopped waiting for this search. The registry request may still finish in the background. Previously received results are preserved.</string>
+    <string name="search_owner_unavailable">The engine connection is unavailable. Reconnect before searching. Previously received results remain available to view.</string>
+    <string name="search_owner_changed">The engine connection changed. Retry explicitly to get current results.</string>
+    <string name="search_idle">Enter a package name to search the public registry.</string>
+</resources>

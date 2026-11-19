@@ -1,6 +1,7 @@
 [workspace]
 members = ["engine", "engine/drivers/wasmer-local", "engine/ffi", "tools/bindgen"]
 default-members = ["engine", "engine/ffi"]
+exclude = ["engine/drivers/wasmer-local/vendor/wasmer-wasix", "engine/drivers/wasmer-local/vendor/virtual-net"]
 resolver = "2"
 
 [workspace.package]
@@ -14,6 +15,11 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
 uniffi = { version = "=0.32.2", default-features = false }
+
+[patch.crates-io]
+# The WasmDroid driver is the sole WASIX consumer.
+wasmer-wasix = { path = "engine/drivers/wasmer-local/vendor/wasmer-wasix" }
+virtual-net = { path = "engine/drivers/wasmer-local/vendor/virtual-net" }
 
 [profile.release]
 lto = "thin"
