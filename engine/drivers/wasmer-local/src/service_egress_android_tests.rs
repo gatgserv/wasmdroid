@@ -2,10 +2,12 @@
 //! These fixtures never attest Android Network routing, DNS or JNI behavior.
 use super::*;
 use std::{
-    os::fd::AsRawFd,
+    io,
+    mem::MaybeUninit,
+    os::fd::{AsRawFd, RawFd},
     sync::{
         Condvar, Mutex,
-        atomic::{AtomicBool, AtomicI32, Ordering},
+        atomic::{AtomicBool, Ordering},
     },
 };
 use tokio::sync::Notify;
@@ -55,7 +57,7 @@ struct Host {
     current: AtomicBool,
     binder: Arc<Gate>,
     dns: Arc<Gate>,
-    descriptor: AtomicI32,
+    descriptor: Mutex<Option<(RawFd, SocketIdentity)>>,
     bound: bool,
 }
 impl AndroidEgressHost for Host {
@@ -63,10 +65,10 @@ impl AndroidEgressHost for Host {
         self.current.load(Ordering::SeqCst)
     }
     fn bind_socket(&self, descriptor: i32) -> bool {
-        self.descriptor.store(descriptor, Ordering::SeqCst);
+        let identity = socket_identity(descriptor).unwrap();
+        *self.descriptor.lock().unwrap() = Some((descriptor, identity));
         self.binder.enter();
-        // SAFETY: the adapter retains ownership throughout this callback.
-        assert_ne!(unsafe { libc::fcntl(descriptor, libc::F_GETFD) }, -1);
+        assert_eq!(socket_identity(descriptor), Some(identity));
         self.bound
     }
     fn resolve_name(&self, name: &str) -> Result<Vec<IpAddr>> {
@@ -80,10 +82,25 @@ fn host(binder: Arc<Gate>, dns: Arc<Gate>, bound: bool) -> Arc<Host> {
         current: AtomicBool::new(true),
         binder,
         dns,
-        descriptor: AtomicI32::new(-1),
+        descriptor: Mutex::new(None),
         bound,
     })
 }
+type SocketIdentity = (libc::dev_t, libc::ino_t);
+
+fn socket_identity(descriptor: RawFd) -> Option<SocketIdentity> {
+    let mut status = MaybeUninit::<libc::stat>::uninit();
+    // SAFETY: fstat writes to valid storage and does not take descriptor ownership.
+    if unsafe { libc::fstat(descriptor, status.as_mut_ptr()) } == -1 {
+        let error = io::Error::last_os_error();
+        assert_eq!(error.raw_os_error(), Some(libc::EBADF), "{error}");
+        return None;
+    }
+    // SAFETY: fstat succeeded and initialized the result.
+    let status = unsafe { status.assume_init() };
+    Some((status.st_dev, status.st_ino))
+}
+
 fn fixture() -> (tempfile::TempDir, EngineSession, EgressScope) {
     let dir = tempfile::tempdir().unwrap();
     let session = EngineSession::open(dir.path()).unwrap();
@@ -144,12 +161,14 @@ async fn binder_receives_owned_duplicate_and_it_closes_only_after_actual_callbac
     let selected = AndroidSelectedNetwork::new(scope.clone(), host.clone()).unwrap();
     let socket = tokio::net::TcpSocket::new_v4().unwrap();
     let original = socket.as_raw_fd();
+    let original_identity = socket_identity(original).unwrap();
     selected.bind(&scope, &socket).await.unwrap();
-    let duplicate = host.descriptor.load(Ordering::SeqCst);
+    let (duplicate, identity) = host.descriptor.lock().unwrap().unwrap();
     assert_ne!(duplicate, original);
-    // SAFETY: this is an observation only; it never adopts or closes the number.
-    assert_eq!(unsafe { libc::fcntl(duplicate, libc::F_GETFD) }, -1);
-    assert_ne!(unsafe { libc::fcntl(original, libc::F_GETFD) }, -1);
+    assert_eq!(identity, original_identity);
+    // Another test may reuse the descriptor number immediately after close.
+    assert_ne!(socket_identity(duplicate), Some(identity));
+    assert_eq!(socket_identity(original), Some(identity));
 }
 
 #[tokio::test]
@@ -159,13 +178,14 @@ async fn aborted_bind_observer_keeps_duplicate_and_native_owner_until_real_retur
     let _release = Release(gate.clone());
     let host = host(gate.clone(), Gate::new(true), true);
     let selected = AndroidSelectedNetwork::new(scope.clone(), host.clone()).unwrap();
+    // Retain the original socket so the kernel cannot recycle its identity.
+    let socket = Arc::new(tokio::net::TcpSocket::new_v4().unwrap());
+    let original_identity = socket_identity(socket.as_raw_fd()).unwrap();
     let observed = {
         let selected = selected.clone();
         let scope = scope.clone();
-        tokio::spawn(async move {
-            let socket = tokio::net::TcpSocket::new_v4().unwrap();
-            selected.bind(&scope, &socket).await
-        })
+        let socket = socket.clone();
+        tokio::spawn(async move { selected.bind(&scope, &socket).await })
     };
     gate.started.notified().await;
     selected.revoke();
@@ -179,13 +199,14 @@ async fn aborted_bind_observer_keeps_duplicate_and_native_owner_until_real_retur
         EngineSession::open(dir.path()),
         Err(EngineError::Conflict(_))
     ));
-    let duplicate = host.descriptor.load(Ordering::SeqCst);
-    // SAFETY: observation of the callback-owned still-live descriptor only.
-    assert_ne!(unsafe { libc::fcntl(duplicate, libc::F_GETFD) }, -1);
+    let (duplicate, identity) = host.descriptor.lock().unwrap().unwrap();
+    assert_ne!(duplicate, socket.as_raw_fd());
+    assert_eq!(identity, original_identity);
+    assert_eq!(socket_identity(duplicate), Some(identity));
     gate.release();
     reopen_after_actual_return(dir.path()).await;
     assert!(!gate.live.load(Ordering::SeqCst));
-    assert_eq!(unsafe { libc::fcntl(duplicate, libc::F_GETFD) }, -1);
+    assert_ne!(socket_identity(duplicate), Some(identity));
 }
 
 #[tokio::test]

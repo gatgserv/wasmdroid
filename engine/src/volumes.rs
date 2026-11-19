@@ -317,7 +317,16 @@ impl VolumeDirectory {
             }
         }
         #[cfg(unix)]
-        self.inner.dir.open_dir(path)?.into_std_file().sync_all()?;
+        {
+            use cap_std::fs::OpenOptionsExt;
+
+            // A directory capability may use O_PATH, which cannot be synced.
+            let mut options = OpenOptions::new();
+            options
+                .read(true)
+                .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW);
+            self.inner.dir.open_with(path, &options)?.sync_all()?;
+        }
         // Windows does not provide the same directory-flush contract. Local
         // tests verify content/atomic no-replace; Android uses the Unix branch.
         Ok(())
